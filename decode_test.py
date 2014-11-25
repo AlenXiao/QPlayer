@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""×ª»»mp3ÎÄ¼þ±àÂë"""
+"""×ªï¿½ï¿½mp3ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½"""
 
 import mp3play
 import time
@@ -7,18 +7,18 @@ import os
 from os.path import exists
 import sys
 
-mp3file = r'H:\musicpack\mp3\004.ÄÎÂä¤Î»¨ - ½ñÈÕµÄ 5Äê2°à.mp3'
-#»ñÈ¡ÏÖÔÚÏµÍ³µÄ±àÂë¸ñÊ½
+#mp3file = r'H:\musicpack\mp3\004.ï¿½ï¿½ï¿½ï¿½Î»ï¿½ - ï¿½ï¿½ï¿½Õµï¿½ 5ï¿½ï¿½2ï¿½ï¿½.mp3'
+#ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ÏµÍ³ï¿½Ä±ï¿½ï¿½ï¿½ï¿½Ê½
 type = sys.getfilesystemencoding()
 print type
-#×ª»»³ÉÏÖÔÚÏµÍ³µÄ±àÂë
-mp3file = mp3file.decode('utf-8').encode(type)
-print mp3file
+#×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÏµÍ³ï¿½Ä±ï¿½ï¿½ï¿½
+#mp3file = mp3file.decode('utf-8').encode(type)
+#print mp3file
 
-mp3 = mp3play.load(mp3file)
+#mp3 = mp3play.load(mp3file)
 
-mp3.play()
+#mp3.play()
 
 #let it play for up to 30 seconds ,then stop it
-time.sleep(min(10,mp3.seconds()))
-mp3.stop()
+#time.sleep(min(10,mp3.seconds()))
+#mp3.stop()
