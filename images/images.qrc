@@ -1,0 +1,16 @@
+<RCC>
+  <qresource prefix="buttons">
+    <file>btn_pause.png</file>
+    <file>btn_pause_hover.png</file>
+    <file>btn_pause_pressed.png</file>
+    <file>btn_play.png</file>
+    <file>btn_play_hover.png</file>
+    <file>btn_play_pressed.png</file>
+    <file>btn_stop.png</file>
+    <file>btn_stop_hover.png</file>
+    <file>btn_stop_pressed.png</file>
+  </qresource>
+  <qresource prefix="background">
+    <file>bg.png</file>
+  </qresource>
+</RCC>
