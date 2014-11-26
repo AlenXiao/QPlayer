@@ -10,4 +10,4 @@ using wmplayer.ocx activex
 
 重新构成。放弃使用windows控件，使用pyqt4的Phonon模块实现。
 
-汇出初步GUI。2014年11月26日
+绘出初步GUI。2014年11月26日
