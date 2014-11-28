@@ -11,7 +11,11 @@ from PyQt4 import QtCore, QtGui
 from PyQt4 import phonon
 from PyQt4.phonon import Phonon
 from images import images_rc
+from PyQt4.QtGui import *
+from PyQt4.QtCore import *
+from PyQt4.phonon import *
 import sys
+import os
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -27,7 +31,66 @@ except AttributeError:
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
 
-class Ui_Qmp3player(object):
+class Qmp3player(QtGui.QMainWindow):
+    #初始化GUI和播放引擎
+    def __init__(self):
+        super(Qmp3player, self).__init__()
+        self.audioOutput = Phonon.AudioOutput(Phonon.MusicCategory)
+        self.mediaObject = Phonon.MediaObject(self)
+        self.mediaObject.setTickInterval(1000)
+        self.mediaObject.tick.connect(self.updateTick)
+        self.mediaObject.currentSourceChanged.connect(self.songChanged)
+        self.mediaObject.stateChanged.connect(self.stateChanged)
+        self.mediaObject.aboutToFinish.connect(self.Finishing)
+
+        Phonon.createPath(self.mediaObject, self.audioOutput)
+
+        self.songList()
+        self.setupUi(self)
+        self.connectActions()
+        self.setupMenu()
+        self.volumeSlider.setAudioOutput(self.audioOutput)
+        self.volumeSlider.setMaximumVolume(0.8)
+        self.seekSlider.setMediaObject(self.mediaObject)
+
+        self.songs = []
+
+    #连接动作
+    def connectActions(self):
+        self.connect(self.playButton, SIGNAL('clicked()'), self.mediaObject.play)
+        self.connect(self.pauseButton, SIGNAL('clicked()'), self.mediaObject.pause)
+        self.connect(self.stopButton, SIGNAL('clicked()'), self.mediaObject.stop)
+        self.openAction = QtGui.QAction("Open", self, shortcut="Ctrl+O", triggered=self.addFiles)
+        self.exitAction = QtGui.QAction("Exit", self, shortcut="Ctrl+E", triggered=self.close)
+
+    def addFiles(self):
+        files = QtGui.QFileDialog.getOpenFileNames(self, "Please select songs", "", self.tr("Song Files(*.mp3)"))
+        index  = len(self.songs)
+
+        for file in files:
+            self.songs.append(Phonon.MediaSource(file))
+
+    def playSong(self):
+        pass
+    def pauseSong(self):
+        pass
+    def stopSong(self):
+        pass
+    def songChanged(self):
+        pass
+    def stateChanged(self):
+        pass
+    def Finishing(self):
+        pass
+    #设置播放器时间
+    def updateTick(self):
+        songTime = QtCore.QTime(0, (time / 60000) % 60, (time / 1000) % 60)
+    def songList(self):
+        pass
+    def setupMenu(self):
+        fileMenu = self.menuBar().addMenu("&File")
+        fileMenu.addAction(self.openAction)
+        fileMenu.addAction(self.exitAction)
     def setupUi(self, Qmp3player):
         Qmp3player.setObjectName(_fromUtf8("Qmp3player"))
         Qmp3player.resize(342, 428)
@@ -37,40 +100,48 @@ class Ui_Qmp3player(object):
 ""))
         self.centralWidget = QtGui.QWidget(Qmp3player)
         self.centralWidget.setObjectName(_fromUtf8("centralWidget"))
+
         self.lcdNumber = QtGui.QLCDNumber(self.centralWidget)
         self.lcdNumber.setGeometry(QtCore.QRect(250, 280, 64, 23))
         self.lcdNumber.setStyleSheet(_fromUtf8("background-color: rgb(255, 255, 255);"))
         self.lcdNumber.setObjectName(_fromUtf8("lcdNumber"))
+
         self.seekSlider = phonon.Phonon.SeekSlider(self.centralWidget)
         self.seekSlider.setGeometry(QtCore.QRect(20, 280, 221, 19))
         self.seekSlider.setObjectName(_fromUtf8("seekSlider"))
+
         self.volumeSlider = phonon.Phonon.VolumeSlider(self.centralWidget)
         self.volumeSlider.setGeometry(QtCore.QRect(210, 340, 109, 22))
         self.volumeSlider.setStyleSheet(_fromUtf8(""))
         self.volumeSlider.setObjectName(_fromUtf8("volumeSlider"))
-        self.play = QtGui.QPushButton(self.centralWidget)
-        self.play.setGeometry(QtCore.QRect(20, 320, 51, 51))
-        self.play.setStyleSheet(_fromUtf8("border-image: url(:/buttons/btn_play.png);"))
-        self.play.setText(_fromUtf8(""))
-        self.play.setObjectName(_fromUtf8("play"))
-        self.pause = QtGui.QPushButton(self.centralWidget)
-        self.pause.setGeometry(QtCore.QRect(80, 320, 51, 51))
-        self.pause.setStyleSheet(_fromUtf8("border-image: url(:/buttons/btn_pause.png);"))
-        self.pause.setText(_fromUtf8(""))
-        self.pause.setObjectName(_fromUtf8("pause"))
-        self.stop = QtGui.QPushButton(self.centralWidget)
-        self.stop.setGeometry(QtCore.QRect(140, 320, 51, 51))
-        self.stop.setStyleSheet(_fromUtf8("border-image: url(:/buttons/btn_stop.png);"))
-        self.stop.setText(_fromUtf8(""))
-        self.stop.setObjectName(_fromUtf8("stop"))
+
+        self.playButton = QtGui.QPushButton(self.centralWidget)
+        self.playButton.setGeometry(QtCore.QRect(20, 320, 51, 51))
+        self.playButton.setStyleSheet(_fromUtf8("border-image: url(:/buttons/btn_play.png);"))
+        self.playButton.setText(_fromUtf8(""))
+        self.playButton.setObjectName(_fromUtf8("playButton"))
+
+        self.pauseButton = QtGui.QPushButton(self.centralWidget)
+        self.pauseButton.setGeometry(QtCore.QRect(80, 320, 51, 51))
+        self.pauseButton.setStyleSheet(_fromUtf8("border-image: url(:/buttons/btn_pause.png);"))
+        self.pauseButton.setText(_fromUtf8(""))
+        self.pauseButton.setObjectName(_fromUtf8("pauseButton"))
+
+        self.stopButton = QtGui.QPushButton(self.centralWidget)
+        self.stopButton.setGeometry(QtCore.QRect(140, 320, 51, 51))
+        self.stopButton.setStyleSheet(_fromUtf8("border-image: url(:/buttons/btn_stop.png);"))
+        self.stopButton.setText(_fromUtf8(""))
+        self.stopButton.setObjectName(_fromUtf8("stopButton"))
+
         self.tableWidget = QtGui.QTableWidget(self.centralWidget)
         self.tableWidget.setGeometry(QtCore.QRect(20, 20, 291, 241))
         self.tableWidget.setStyleSheet(_fromUtf8("background-color: rgb(255, 255, 255);"))
         self.tableWidget.setObjectName(_fromUtf8("tableWidget"))
         self.tableWidget.setColumnCount(0)
         self.tableWidget.setRowCount(0)
+
         Qmp3player.setCentralWidget(self.centralWidget)
-        self.menuBar = QtGui.QMenuBar(Qmp3player)
+        '''self.menuBar = QtGui.QMenuBar(Qmp3player)
         self.menuBar.setGeometry(QtCore.QRect(0, 0, 342, 23))
         self.menuBar.setObjectName(_fromUtf8("menuBar"))
         self.menuFile = QtGui.QMenu(self.menuBar)
@@ -86,27 +157,29 @@ class Ui_Qmp3player(object):
         self.actionExit_2.setObjectName(_fromUtf8("actionExit_2"))
         self.menuFile.addAction(self.actionOpen_2)
         self.menuFile.addAction(self.actionExit_2)
-        self.menuBar.addAction(self.menuFile.menuAction())
+        self.menuBar.addAction(self.menuFile.menuAction())'''
 
         self.retranslateUi(Qmp3player)
         QtCore.QMetaObject.connectSlotsByName(Qmp3player)
 
     def retranslateUi(self, Qmp3player):
         Qmp3player.setWindowTitle(_translate("Qmp3player", "Qmp3player", None))
-        self.menuFile.setTitle(_translate("Qmp3player", "File", None))
+        '''self.menuFile.setTitle(_translate("Qmp3player", "File", None))
         self.actionOpen.setText(_translate("Qmp3player", "Open", None))
         self.actionExit.setText(_translate("Qmp3player", "Exit", None))
         self.actionOpen_2.setText(_translate("Qmp3player", "Open", None))
-        self.actionExit_2.setText(_translate("Qmp3player", "Exit", None))
+        self.actionExit_2.setText(_translate("Qmp3player", "Exit", None))'''
+
 
 
 
 if __name__ == "__main__":
     import sys
     app = QtGui.QApplication(sys.argv)
-    Qmp3player = QtGui.QMainWindow()
-    ui = Ui_Qmp3player()
-    ui.setupUi(Qmp3player)
-    Qmp3player.show()
+    QUI = QtGui.QMainWindow()
+    ui = Qmp3player()
+    #ui.setupUi(QUI)
+    ui.show()
+
     sys.exit(app.exec_())
 
