@@ -3,8 +3,8 @@
 #
 #
 # Created: Wed Nov 26 10:19:46 2014
-#
-#
+# Author: MarcoQin
+# Email: qyyfy2009@gmail.com
 # WARNING! All changes made in this file will be lost!
 
 from PyQt4 import QtCore, QtGui
@@ -37,10 +37,12 @@ class Qmp3player(QtGui.QMainWindow):
         super(Qmp3player, self).__init__()
         self.audioOutput = Phonon.AudioOutput(Phonon.MusicCategory)
         self.mediaObject = Phonon.MediaObject(self)
+        self.mediaInformation = Phonon.MediaObject(self)
         self.mediaObject.setTickInterval(1000)
         self.mediaObject.tick.connect(self.updateTick)
         self.mediaObject.currentSourceChanged.connect(self.songChanged)
         self.mediaObject.stateChanged.connect(self.stateChanged)
+        self.mediaInformation.stateChanged.connect(self.mediaStateChanged)
         self.mediaObject.aboutToFinish.connect(self.Finishing)
 
         Phonon.createPath(self.mediaObject, self.audioOutput)
@@ -55,38 +57,64 @@ class Qmp3player(QtGui.QMainWindow):
 
         self.songs = []
 
-    #连接动作
+    #连接鼠标Action
     def connectActions(self):
         self.connect(self.playButton, SIGNAL('clicked()'), self.mediaObject.play)
         self.connect(self.pauseButton, SIGNAL('clicked()'), self.mediaObject.pause)
         self.connect(self.stopButton, SIGNAL('clicked()'), self.mediaObject.stop)
         self.openAction = QtGui.QAction("Open", self, shortcut="Ctrl+O", triggered=self.addFiles)
         self.exitAction = QtGui.QAction("Exit", self, shortcut="Ctrl+E", triggered=self.close)
+        self.tableWidget.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.tableWidget.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.tableWidget.cellPressed.connect(self.songSelected)
+
+    #通过table选择歌曲
+    def songSelected(self,row,column):
+        self.mediaObject.stop()
+        #something seems need here
+
+        self.mediaObject.setCurrentSource(self.songs[row])
 
     def addFiles(self):
         files = QtGui.QFileDialog.getOpenFileNames(self, "Please select songs", "", self.tr("Song Files(*.mp3)"))
-        index  = len(self.songs)
 
         for file in files:
             self.songs.append(Phonon.MediaSource(file))
 
+        if self.songs:
+            self.mediaInformation.setCurrentSource(self.songs[0])
+            self.mediaObject.setCurrentSource(self.songs[0])
     def playSong(self):
         pass
     def pauseSong(self):
         pass
     def stopSong(self):
         pass
-    def songChanged(self):
-        pass
+    #如果改变了歌曲，在table上将之高亮，重设时间显示
+    def songChanged(self,source):
+        self.tableWidget.selectRow(self.songs.index(source))
+        self.lcdNumber.display('00:00')
+
     def stateChanged(self):
         pass
+    #播放将要结束时，将下一首歌曲排入播放队列
     def Finishing(self):
-        pass
+        index = self.songs.index(self.mediaObject.currentSource()) + 1  #播放序列+1
+        #index是否过长，超出播放列表则自动跳到第一首
+        if len(self.songs) > index:
+            self.mediaObject.enqueue(self.songs[index])
+        else:
+            self.mediaObject.enqueue(self.songs[0])
+
     #设置播放器时间
-    def updateTick(self):
+    def updateTick(self,time):
         songTime = QtCore.QTime(0, (time / 60000) % 60, (time / 1000) % 60)
+        self.lcdNumber.display(songTime.toString('mm:ss'))
     def songList(self):
         pass
+    def mediaStateChanged(self):
+        mediaData = self.mediaInformation.metaData()  #找到media的元数据
+        
     def setupMenu(self):
         fileMenu = self.menuBar().addMenu("&File")
         fileMenu.addAction(self.openAction)
@@ -178,7 +206,6 @@ if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
     QUI = QtGui.QMainWindow()
     ui = Qmp3player()
-    #ui.setupUi(QUI)
     ui.show()
 
     sys.exit(app.exec_())
