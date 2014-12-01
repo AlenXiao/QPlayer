@@ -32,7 +32,7 @@ except AttributeError:
         return QtGui.QApplication.translate(context, text, disambig)
 
 class Qmp3player(QtGui.QMainWindow):
-    #初始化GUI和播放引擎
+    # 初始化GUI和播放引擎
     def __init__(self):
         super(Qmp3player, self).__init__()
         self.audioOutput = Phonon.AudioOutput(Phonon.MusicCategory)
@@ -57,7 +57,7 @@ class Qmp3player(QtGui.QMainWindow):
 
         self.songs = []
 
-    #连接鼠标Action
+    # 连接鼠标Action
     def connectActions(self):
         self.connect(self.playButton, SIGNAL('clicked()'), self.mediaObject.play)
         self.connect(self.pauseButton, SIGNAL('clicked()'), self.mediaObject.pause)
@@ -68,21 +68,25 @@ class Qmp3player(QtGui.QMainWindow):
         self.tableWidget.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.tableWidget.cellPressed.connect(self.songSelected)
 
-    #通过table选择歌曲
+    # 通过table选择歌曲
     def songSelected(self,row,column):
         self.mediaObject.stop()
         #something seems need here
 
         self.mediaObject.setCurrentSource(self.songs[row])
+        self.mediaObject.play()
 
     def addFiles(self):
         files = QtGui.QFileDialog.getOpenFileNames(self, "Please select songs", "", self.tr("Song Files(*.mp3)"))
 
+        index = len(self.songs)
+
         for file in files:
             self.songs.append(Phonon.MediaSource(file))
 
+        print index
         if self.songs:
-            self.mediaInformation.setCurrentSource(self.songs[0])
+            self.mediaInformation.setCurrentSource(self.songs[index])
             self.mediaObject.setCurrentSource(self.songs[0])
     def playSong(self):
         pass
@@ -90,31 +94,56 @@ class Qmp3player(QtGui.QMainWindow):
         pass
     def stopSong(self):
         pass
-    #如果改变了歌曲，在table上将之高亮，重设时间显示
+    # 如果改变了歌曲，在table上将之高亮，重设时间显示
     def songChanged(self,source):
         self.tableWidget.selectRow(self.songs.index(source))
         self.lcdNumber.display('00:00')
 
     def stateChanged(self):
         pass
-    #播放将要结束时，将下一首歌曲排入播放队列
+    # 播放将要结束时，将下一首歌曲排入播放队列
     def Finishing(self):
         index = self.songs.index(self.mediaObject.currentSource()) + 1  #播放序列+1
-        #index是否过长，超出播放列表则自动跳到第一首
         if len(self.songs) > index:
             self.mediaObject.enqueue(self.songs[index])
         else:
             self.mediaObject.enqueue(self.songs[0])
 
-    #设置播放器时间
+    # 设置播放器时间
     def updateTick(self,time):
         songTime = QtCore.QTime(0, (time / 60000) % 60, (time / 1000) % 60)
         self.lcdNumber.display(songTime.toString('mm:ss'))
     def songList(self):
         pass
+    # 提取文件名
+    def parseName(self,source):
+        title =  source.split('/')[-1]
+        title =  title.split('.')
+        if len(title) == 2:
+            return title[0]
+        else:
+            return title[-2]
+
+    # 在table上显示歌名
     def mediaStateChanged(self):
-        mediaData = self.mediaInformation.metaData()  #找到media的元数据
-        
+        # mediaData = self.mediaInformation.metaData()  # 找到media的元数据
+        title = self.mediaInformation.currentSource().fileName()  # 文件名
+
+        title = self.parseName(title)
+
+        titleItem = QtGui.QTableWidgetItem(title)
+        titleItem.setFlags(titleItem.flags() ^ QtCore.Qt.ItemIsEditable)
+
+        currentRow = self.tableWidget.rowCount()
+        self.tableWidget.insertRow(currentRow)
+        self.tableWidget.setItem(currentRow, 0,titleItem)
+
+        index = self.songs.index(self.mediaInformation.currentSource()) + 1
+        if len(self.songs) > index:
+            self.mediaInformation.setCurrentSource(self.songs[index])
+        else:
+            self.tableWidget.resizeColumnsToContents()
+
     def setupMenu(self):
         fileMenu = self.menuBar().addMenu("&File")
         fileMenu.addAction(self.openAction)
@@ -165,39 +194,18 @@ class Qmp3player(QtGui.QMainWindow):
         self.tableWidget.setGeometry(QtCore.QRect(20, 20, 291, 241))
         self.tableWidget.setStyleSheet(_fromUtf8("background-color: rgb(255, 255, 255);"))
         self.tableWidget.setObjectName(_fromUtf8("tableWidget"))
-        self.tableWidget.setColumnCount(0)
+        self.tableWidget.setColumnCount(1)
         self.tableWidget.setRowCount(0)
+        header = ('Title',)
+        self.tableWidget.setHorizontalHeaderLabels(header)
 
         Qmp3player.setCentralWidget(self.centralWidget)
-        '''self.menuBar = QtGui.QMenuBar(Qmp3player)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 342, 23))
-        self.menuBar.setObjectName(_fromUtf8("menuBar"))
-        self.menuFile = QtGui.QMenu(self.menuBar)
-        self.menuFile.setObjectName(_fromUtf8("menuFile"))
-        Qmp3player.setMenuBar(self.menuBar)
-        self.actionOpen = QtGui.QAction(Qmp3player)
-        self.actionOpen.setObjectName(_fromUtf8("actionOpen"))
-        self.actionExit = QtGui.QAction(Qmp3player)
-        self.actionExit.setObjectName(_fromUtf8("actionExit"))
-        self.actionOpen_2 = QtGui.QAction(Qmp3player)
-        self.actionOpen_2.setObjectName(_fromUtf8("actionOpen_2"))
-        self.actionExit_2 = QtGui.QAction(Qmp3player)
-        self.actionExit_2.setObjectName(_fromUtf8("actionExit_2"))
-        self.menuFile.addAction(self.actionOpen_2)
-        self.menuFile.addAction(self.actionExit_2)
-        self.menuBar.addAction(self.menuFile.menuAction())'''
 
         self.retranslateUi(Qmp3player)
         QtCore.QMetaObject.connectSlotsByName(Qmp3player)
 
     def retranslateUi(self, Qmp3player):
         Qmp3player.setWindowTitle(_translate("Qmp3player", "Qmp3player", None))
-        '''self.menuFile.setTitle(_translate("Qmp3player", "File", None))
-        self.actionOpen.setText(_translate("Qmp3player", "Open", None))
-        self.actionExit.setText(_translate("Qmp3player", "Exit", None))
-        self.actionOpen_2.setText(_translate("Qmp3player", "Open", None))
-        self.actionExit_2.setText(_translate("Qmp3player", "Exit", None))'''
-
 
 
 
