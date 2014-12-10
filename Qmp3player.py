@@ -12,10 +12,10 @@ from PyQt4 import phonon
 from PyQt4.phonon import Phonon
 from images import images_rc
 from PyQt4.QtGui import *
-from PyQt4.QtCore import *
 from PyQt4.phonon import *
 import sys
 import os
+import cPickle as pickle
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -56,50 +56,171 @@ class Qmp3player(QtGui.QMainWindow):
         self.seekSlider.setMediaObject(self.mediaObject)
 
         self.songs = []
+        self.songlist = []
+        self.loadSongList()
+        self.refreshSongList()
+        self.wasPlaying = False
+
 
     # 连接鼠标Action
     def connectActions(self):
-        self.connect(self.playButton, SIGNAL('clicked()'), self.mediaObject.play)
-        self.connect(self.pauseButton, SIGNAL('clicked()'), self.mediaObject.pause)
-        self.connect(self.stopButton, SIGNAL('clicked()'), self.mediaObject.stop)
+        QtCore.QObject.connect(self.playButton, QtCore.SIGNAL('clicked()'), self.playSong)
+        QtCore.QObject.connect(self.pauseButton, QtCore.SIGNAL('clicked()'), self.mediaObject.pause)
+        QtCore.QObject.connect(self.stopButton,  QtCore.SIGNAL('clicked()'), self.stopSong)
         self.openAction = QtGui.QAction("Open", self, shortcut="Ctrl+O", triggered=self.addFiles)
         self.exitAction = QtGui.QAction("Exit", self, shortcut="Ctrl+E", triggered=self.close)
-        self.tableWidget.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.tableWidget.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.tableWidget.cellPressed.connect(self.songSelected)
 
-    # 通过table选择歌曲
-    def songSelected(self,row,column):
+        # 连接DEL按钮
+        QtCore.QObject.connect((QtGui.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Delete), self.listWidget)),QtCore.SIGNAL('activated()'), self.delFiles)
+
+        self.listWidget.mouseDoubleClickEvent = self.doubleSelectSong
+
+    def doubleSelectSong(self,a):
+         index = self.listWidget.row(self.listWidget.selectedItems()[0])
+         self.songSelected(index)
+
+    # 通过list选择歌曲
+    def songSelected(self,index):
         self.mediaObject.stop()
         #something seems need here
 
-        self.mediaObject.setCurrentSource(self.songs[row])
+        self.mediaObject.setCurrentSource(self.songs[index])
         self.mediaObject.play()
+        self.wasPlaying = True
+        if self.wasPlaying:
+            self.playButton.setStyleSheet(_fromUtf8("border-image: url(:/buttons/btn_pause.png);"))
+            QtCore.QObject.connect(self.playButton, QtCore.SIGNAL('clicked()'), self.pauseSong)
 
+    def loadSongList(self):
+        '''reload(sys)
+        sys.setdefaultencoding('utf-8')
+        type = sys.getfilesystemencoding()'''
+        if os.path.exists('playlist.lst') is True:
+            try:
+                f = open('playlist.lst', 'rb')
+                self.songlist = pickle.load(f)
+            except IOError:
+                pass
+            except EOFError:
+                pass
+            finally:
+                f.close()
+
+        for song in self.songlist:
+            #print song
+            self.songs.append(Phonon.MediaSource(song))
+
+        self.songList = []
+
+
+    def saveSongList(self):
+        '''reload(sys)
+        sys.setdefaultencoding('utf-8')
+        type = sys.getfilesystemencoding()'''
+        for song in self.songs:
+            index = self.songs.index(song)
+            self.mediaInformation.setCurrentSource(self.songs[index])
+            path = self.mediaInformation.currentSource().fileName()
+            #path = str(path).decode('utf-8').encode(type)
+            #print path
+
+            self.songlist.append(path)
+
+
+        file = open('playlist.lst', 'wb')
+        pickle.dump(self.songlist, file)
+        file.close()
+
+        self.songlist = []
     def addFiles(self):
-        files = QtGui.QFileDialog.getOpenFileNames(self, "Please select songs", "", self.tr("Song Files(*.mp3)"))
+        files = QtGui.QFileDialog.getOpenFileNames(self, "Please select songs", "", self.tr("Song Files(*.*)"))
 
-        index = len(self.songs)
+        #index = len(self.songs)
 
         for file in files:
+            #print file
             self.songs.append(Phonon.MediaSource(file))
+        #print index
+        #if self.songs:
+        #    self.mediaInformation.setCurrentSource(self.songs[index])
+        #   self.mediaObject.setCurrentSource(self.songs[0])
+        self.refreshSongList()
+        self.saveSongList()
 
+    def delFilesFirst(self,selectedItems):
+        index = []
+        for item in selectedItems:
+            index.append(self.listWidget.row(item))
+        index = sorted(index, reverse=True)
         print index
-        if self.songs:
-            self.mediaInformation.setCurrentSource(self.songs[index])
-            self.mediaObject.setCurrentSource(self.songs[0])
+
+        for num in index:
+            self.songs.remove(self.songs[num])
+        '''for item in selectedItems:
+            index = self.listWidget.row(item)
+            print len(self.songs)
+            print index
+
+            self.songs.remove(self.songs[index])'''
+
+
+        self.refreshSongList()
+        self.saveSongList()
+
+
+    def delFiles(self):
+        selectedItems = self.listWidget.selectedItems()
+
+        if selectedItems:
+            if self.wasPlaying:
+                self.mediaObject.stop()
+                self.delFilesFirst(selectedItems)
+            else:
+                self.delFilesFirst(selectedItems)
+        else:
+            warning = QMessageBox(self)
+            warning.setWindowTitle('Warning!')
+            warning.setText('NO ITEM SELECTED!')
+            warning.show()
+
+
     def playSong(self):
-        pass
+        selectedSong = self.listWidget.selectedItems()
+        if len(selectedSong) > 0:
+            index = self.listWidget.row(self.listWidget.selectedItems()[0])
+        else:
+            index = 0
+
+        if self.songs[index] == self.mediaObject.currentSource():
+            if self.mediaObject.currentSource():
+                self.mediaObject.play()
+        else:
+            self.mediaObject.setCurrentSource(self.songs[index])
+            self.mediaObject.play()
+        self.wasPlaying = True
+
+        #play按钮变成pause
+        if self.wasPlaying:
+            self.playButton.setStyleSheet(_fromUtf8("border-image: url(:/buttons/btn_pause.png);"))
+            QtCore.QObject.connect(self.playButton, QtCore.SIGNAL('clicked()'), self.pauseSong)
     def pauseSong(self):
-        pass
+        self.playButton.setStyleSheet(_fromUtf8("border-image: url(:/buttons/btn_play.png);"))
+        QtCore.QObject.connect(self.playButton, QtCore.SIGNAL('clicked()'), self.playSong)
+        self.wasPlaying = False
+        self.mediaObject.pause()
     def stopSong(self):
-        pass
+        self.mediaObject.stop()
+        QtCore.QObject.connect(self.playButton, QtCore.SIGNAL('clicked()'), self.playSong)
+        self.playButton.setStyleSheet(_fromUtf8("border-image: url(:/buttons/btn_play.png);"))
+        self.lcdNumber.display('00:00')
     # 如果改变了歌曲，在table上将之高亮，重设时间显示
     def songChanged(self,source):
-        self.tableWidget.selectRow(self.songs.index(source))
+        self.listWidget.setCurrentRow(self.songs.index(source))
+        #self.listWidget.setItemSelected(self.listWidget.(self.songs.index(source)))
         self.lcdNumber.display('00:00')
 
-    def stateChanged(self):
+    # 根据播放状态改变按钮状态
+    def stateChanged(self, newState):
         pass
     # 播放将要结束时，将下一首歌曲排入播放队列
     def Finishing(self):
@@ -121,9 +242,23 @@ class Qmp3player(QtGui.QMainWindow):
         title =  title.split('.')
         if len(title) == 2:
             return title[0]
+        elif len(title) == 1:
+            return title[0]
         else:
             return title[-2]
 
+    def refreshSongList(self):
+        self.listWidget.clear()
+
+        for song in self.songs:
+            index = self.songs.index(song)
+            self.mediaInformation.setCurrentSource(self.songs[index])
+            title = self.mediaInformation.currentSource().fileName()
+
+            #print title
+            title = self.parseName(title)
+            #print title
+            self.listWidget.addItem(title)
     # 在table上显示歌名
     def mediaStateChanged(self):
         # mediaData = self.mediaInformation.metaData()  # 找到media的元数据
@@ -131,18 +266,20 @@ class Qmp3player(QtGui.QMainWindow):
 
         title = self.parseName(title)
 
-        titleItem = QtGui.QTableWidgetItem(title)
-        titleItem.setFlags(titleItem.flags() ^ QtCore.Qt.ItemIsEditable)
 
-        currentRow = self.tableWidget.rowCount()
-        self.tableWidget.insertRow(currentRow)
-        self.tableWidget.setItem(currentRow, 0,titleItem)
+        #titleItem = QtGui.QTableWidgetItem(title)
+        #titleItem.setFlags(titleItem.flags() ^ QtCore.Qt.ItemIsEditable)
 
-        index = self.songs.index(self.mediaInformation.currentSource()) + 1
-        if len(self.songs) > index:
-            self.mediaInformation.setCurrentSource(self.songs[index])
-        else:
-            self.tableWidget.resizeColumnsToContents()
+        #currentRow = self.tableWidget.rowCount()
+        #self.tableWidget.insertRow(currentRow)
+        #self.tableWidget.setItem(currentRow, 0,titleItem)
+        #self.listWidget.addItem(title)
+
+        #index = self.songs.index(self.mediaInformation.currentSource()) + 1
+        #if len(self.songs) > index:
+        #    self.mediaInformation.setCurrentSource(self.songs[index])
+        #else:
+        #    pass#self.tableWidget.resizeColumnsToContents()
 
     def setupMenu(self):
         fileMenu = self.menuBar().addMenu("&File")
@@ -190,14 +327,12 @@ class Qmp3player(QtGui.QMainWindow):
         self.stopButton.setText(_fromUtf8(""))
         self.stopButton.setObjectName(_fromUtf8("stopButton"))
 
-        self.tableWidget = QtGui.QTableWidget(self.centralWidget)
-        self.tableWidget.setGeometry(QtCore.QRect(20, 20, 291, 241))
-        self.tableWidget.setStyleSheet(_fromUtf8("background-color: rgb(255, 255, 255);"))
-        self.tableWidget.setObjectName(_fromUtf8("tableWidget"))
-        self.tableWidget.setColumnCount(1)
-        self.tableWidget.setRowCount(0)
-        header = ('Title',)
-        self.tableWidget.setHorizontalHeaderLabels(header)
+        self.listWidget = QtGui.QListWidget(self.centralWidget)
+        self.listWidget.setGeometry(QtCore.QRect(20, 20, 291, 241))
+
+        self.listWidget.setObjectName(_fromUtf8("tableWidget"))
+        self.listWidget.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)  # 设置多选模式，用于多文件删除
+
 
         Qmp3player.setCentralWidget(self.centralWidget)
 
