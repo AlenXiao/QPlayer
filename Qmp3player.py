@@ -382,12 +382,7 @@ class Ui_Form(QtGui.QMainWindow):
     def parseName(self,source):
         title =  source.split('/')[-1]
         title =  title.split('.')
-        if len(title) == 2:
-            return title[0]
-        elif len(title) == 1:
-            return title[0]
-        else:
-            return title[-2]
+        return title[-2]
 
 
     def refreshSongList(self):
