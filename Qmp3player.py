@@ -8,7 +8,7 @@ Supports .mp3, .wav formats.
 With an id3v1.0 tag reader.
 '''
 
-__author__ = "MarcoQin <qyyfy2009@gmail.com>"
+__author__ = "MarcoQin <qyyfy2009@gmail/163.com>"
 __version__ = "1.1"
 
 
@@ -48,13 +48,11 @@ class Ui_Form(QtGui.QMainWindow):
         self.mediaObject.tick.connect(self.updateTick)
         self.mediaObject.currentSourceChanged.connect(self.songChanged)
         self.mediaObject.stateChanged.connect(self.stateChanged)
-        #self.mediaObject.metaDataChanged.connect(self.updateMeta)
         self.mediaObject.aboutToFinish.connect(self.Finishing)
         Phonon.createPath(self.mediaObject, self.audioOutput)
 
         self.setupUi(self)
         self.connectActions()
-        #self.setupMenu()
         self.volumeSlider.setAudioOutput(self.audioOutput)
         self.volumeSlider.setMaximumVolume(0.8)
         self.seekSlider.setMediaObject(self.mediaObject)
@@ -89,7 +87,6 @@ class Ui_Form(QtGui.QMainWindow):
     # 通过list选择歌曲
     def songSelected(self,index):
         self.mediaObject.stop()
-        #something seems need here
         self.mediaObject.clearQueue()
         self.mediaObject.setCurrentSource(self.songs[index])
         self.mediaObject.play()
@@ -315,29 +312,6 @@ class Ui_Form(QtGui.QMainWindow):
 
     def getMetaData(self):
         self.mediaInformation.setCurrentSource(self.mediaObject.currentSource())
-        '''用下面的实现来update media info会出现一首歌的延迟，放弃使用。
-        mediaData = self.mediaInformation.metaData()
-        #print unicode(self.mediaObject.currentSource().fileName())
-        #print mediaData
-        mediaDict = {}
-        for k, v in mediaData.items():
-            mediaDict[unicode(k).encode('utf-8')] = unicode(v[0])
-        #print mediaDict
-
-        title = mediaDict.get('TITLE', '')
-        #print title
-        if not title:
-            title = self.mediaObject.currentSource().fileName()
-            title = self.parseName(title)
-
-        artist = mediaDict.get('ARTIST','N/A')
-        #print artist
-
-        album = mediaDict.get('ALBUM', 'N/A')
-        #print album
-
-        text = 'Title:' + title + '\n' + 'Artist:' + artist + '\n' + 'Album:' + album
-        self.setLabelText(text,False)'''
         title = self.mediaObject.currentSource().fileName()
         title = self.parseName(title)
         text = 'Title:' + title + '\n' + 'Artist:N/A' + '\n' + 'Album:M/A'
@@ -358,7 +332,7 @@ class Ui_Form(QtGui.QMainWindow):
 
     # 播放将要结束时，将下一首歌曲排入播放队列
     def Finishing(self):
-        index = self.songs.index(self.mediaObject.currentSource()) + 1  #播放序列+1
+        index = self.songs.index(self.mediaObject.currentSource()) + 1
         if len(self.songs) > index:
             self.mediaObject.enqueue(self.songs[index])
         else:
@@ -387,7 +361,6 @@ class Ui_Form(QtGui.QMainWindow):
 
     def refreshSongList(self):
         self.listWidget.clear()
-
         for song in self.songs:
             index = self.songs.index(song)
             self.mediaInformation.setCurrentSource(self.songs[index])
