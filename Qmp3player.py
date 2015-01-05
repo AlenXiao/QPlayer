@@ -144,12 +144,7 @@ class Ui_Form(QtGui.QMainWindow):
         self.refreshSongList()
 
 
-    def delFilesFirst(self,selectedItems):
-        index = []
-        for item in selectedItems:
-            index.append(self.listWidget.row(item))
-        index = sorted(index, reverse=True)
-
+    def delFilesFirst(self,index):
         for num in index:
             self.songs.remove(self.songs[num])
 
@@ -177,12 +172,12 @@ class Ui_Form(QtGui.QMainWindow):
                 if self.mediaObject.currentSource() in selectedSongs:
                     self.mediaObject.stop()
                     self.wasPlaying = False
-                    self.delFilesFirst(selectedItems)
+                    self.delFilesFirst(index)
                     self.setLabelText(1,True)
                 else:
-                    self.delFilesFirst(selectedItems)
+                    self.delFilesFirst(index)
             else:
-                self.delFilesFirst(selectedItems)
+                self.delFilesFirst(index)
         else:
             warning = QtGui.QMessageBox(self)
             warning.setWindowTitle('Warning!')
