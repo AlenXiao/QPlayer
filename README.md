@@ -1,4 +1,4 @@
-#Qmp3player
+#QPlayer
 ==========
 
 Music player..
