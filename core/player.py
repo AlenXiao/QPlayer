@@ -20,24 +20,30 @@ class Player(object):
         ]
 
     def play(self, uri):
-        self.default_args[-1] = '"%s"'%uri
-        # print ' '.join(self.default_args)
-        print ' '.join(self.default_args)
-        #  subprocess.Popen(' '.join(self.default_args), stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
-        subprocess.Popen('mplayer -slave -nolirc -quiet -softvol "/home/marcoqin/audiodump.wav"', stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
-        # self.core = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-        # self.core.stdin.write('\n')
-        # time.sleep(0.1)
-        # self.core.wait()
-        # Thread(target=self.core.wait).start()
+        self.default_args[-1] = uri
+        self.player = subprocess.Popen(self.default_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        Thread(target=self.watch_dog).start()
+        while 1:
+            args = raw_input('input cmd--> ')
+            self.player.stdin.write(args+'\n')
+            while 1:
+                try:
+                    result = self.player.stdout.readline()
+                except IOError:
+                    break
+                if 'ANS_FILENAME' in result:
+                    print result
+                    break
+
+    def watch_dog(self):
+        self.player.wait()
 
 if __name__ == '__main__':
-    os.chdir(os.path.abspath('/'))
-    print os.path.abspath('/')
-    #  a = subprocess.Popen('mplayer -slave -nolirc -quiet -softvol "/home/marcoqin/marco/audiodump.wav"', shell=True) # this can work
-    a = subprocess.Popen(['mplayer', '-slave', '-nolirc', '-quiet', '-softvol', "/home/marcoqin/marco/audiodump.wav"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-    print a
-    def b():
-        a.wait()
-    Thread(target=b).start()
+    #  a = subprocess.Popen(['mplayer', '-slave', '-nolirc', '-quiet', '-softvol', "/home/marcoqin/marco/audiodump.wav"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    #  print a
+    #  def b():
+        #  a.wait()
+    #  Thread(target=b).start()
+    uri = raw_input('please input file path: ')
     #  Player().play("/home/marcoqin/音乐/小森きり - 砕月～イノチ～.flac")
+    Player().play(uri)
