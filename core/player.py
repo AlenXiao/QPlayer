@@ -40,7 +40,7 @@ class Player(object):
         self._pause = not self._pause
         self._send_command('pause')
 
-    def quit(self):
+    def stop(self):
         if not self.is_alive:
             return
         self._send_command('stop')
@@ -96,17 +96,17 @@ class Player(object):
         time.sleep(0.1)
         if not extract_string:
             return
-        #  for line in self.player.stdout:
-            #  if extract_string in line:
-                #  return line.split('=')[1].strip()
+        for line in iter(self.player.stdout.readline, ''):
+            if extract_string in line:
+                return line.split('=')[1].strip()
 
-        while 1:
-            try:
-                output = self.player.stdout.readline().rstrip()
-            except IOError:
-                return
-            if extract_string in output:
-                return output.split('=')[1].strip()
+        #  while 1:
+            #  try:
+                #  output = self.player.stdout.readline().rstrip()
+            #  except IOError:
+                #  return
+            #  if extract_string in output:
+                #  return output.split('=')[1].strip()
 
 
     def watch_dog(self):
