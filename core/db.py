@@ -66,5 +66,5 @@ class Row(dict):
 
 if __name__ == '__main__':
     db = DB()
-    db.execute('insert into songs (name, path) values ("test", "/home/test")')
-    print db.get('select * from songs')
+    #  db.execute('insert into songs (name, path) values ("test", "/home/test")')
+    print db.query('select * from songs')
