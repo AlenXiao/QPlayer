@@ -23,6 +23,7 @@ class Player(object):
         self._time_pos = 0
         self._file_info = {}
         self.song_data = song_data  #model.Song
+        self.player = None
 
     def start(self, uri):
         self.play_args[-1] = uri
@@ -41,10 +42,15 @@ class Player(object):
             self.start(current_song.path)
 
     def load_file(self, uri):
-        self._send_command('loadfile "{0}"'.format(uri))
+        self._send_command('loadfile "{0}"'.format(uri.encode('utf-8')))
 
-    def next(self, uri):
-        self.load_file(uri)
+    def next(self):
+        song = self.song_data.next_song
+        self.load_file(song.path)
+
+    def previous(self):
+        song = self.song_data.previous_song
+        self.load_file(song.path)
 
     def pause(self):
         self._pause = not self._pause
