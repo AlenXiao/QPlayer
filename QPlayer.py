@@ -229,12 +229,14 @@ class Ui_Form(QtGui.QMainWindow):
 
 
     def pauseSong(self):
+        self.player_core.pause()
         self.wasPlaying = False
         self.mediaObject.pause()
         self.buttonChange(self.wasPlaying)
 
 
     def stopSong(self):
+        self.player_core.stop()
         self.totalTime = '00:00'
         self.mediaObject.stop()
         self.wasPlaying = False
@@ -243,6 +245,7 @@ class Ui_Form(QtGui.QMainWindow):
 
 
     def nextSong(self):
+        self.player_core.next()
         self.mediaObject.stop()
         self.mediaObject.clearQueue()
         if self.wasPlaying:
@@ -275,6 +278,7 @@ class Ui_Form(QtGui.QMainWindow):
 
 
     def previousSong(self):
+        self.player_core.previous()
         self.mediaObject.stop()
         self.mediaObject.clearQueue()
         if self.wasPlaying:
