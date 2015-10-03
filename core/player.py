@@ -6,12 +6,10 @@ import sys
 import time
 import subprocess
 from threading import Thread
-import Queue
 
 class Player(object):
 
-    def __init__(self, queue):
-        self.queue = queue
+    def __init__(self):
         self.play_args = [
             'mplayer',
             '-slave',
@@ -26,14 +24,12 @@ class Player(object):
         self._file_info = {}
 
     def play(self, uri):
-        uri = self.queue.get()
         self.play_args[-1] = uri
         self.player = subprocess.Popen(self.play_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         Thread(target=self.watch_dog).start()
         self._is_playing = True
 
-    def next(self):
-        uri = self.queue.get()
+    def next(self, uri):
         self._send_command('loadfile "{0}"'.format(uri))
 
     def pause(self):
@@ -120,11 +116,7 @@ if __name__ == '__main__':
     #  Thread(target=b).start()
     uri = raw_input('please input file path: ')
     #  Player().play("/home/marcoqin/音乐/小森きり - 砕月～イノチ～.flac")
-    queue = Queue.Queue(maxsize=1000)
-    for root,dirs,files in os.walk(uri):
-        for song in files:
-            queue.put('{0}{1}'.format(root, song))
-    player = Player(queue)
+    player = Player()
     while 1:
         cmd = raw_input('input cmd: ')
         if cmd == 'start':
