@@ -9,7 +9,7 @@ from threading import Thread
 
 class Player(object):
 
-    def __init__(self):
+    def __init__(self, song_data):
         self.play_args = [
             'mplayer',
             '-slave',
@@ -22,15 +22,29 @@ class Player(object):
         self._is_playing = False
         self._time_pos = 0
         self._file_info = {}
+        self.song_data = song_data  #model.Song
 
-    def play(self, uri):
+    def start(self, uri):
         self.play_args[-1] = uri
         self.player = subprocess.Popen(self.play_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         Thread(target=self.watch_dog).start()
         self._is_playing = True
 
-    def next(self, uri):
+    def play(self):
+        current_song = self.song_data.current_song
+        if self.is_alive:
+            if self._pause:
+                self.pause()
+            else:
+                self.load_file(current_song.path)
+        else:
+            self.start(current_song.path)
+
+    def load_file(self, uri):
         self._send_command('loadfile "{0}"'.format(uri))
+
+    def next(self, uri):
+        self.load_file(uri)
 
     def pause(self):
         self._pause = not self._pause
