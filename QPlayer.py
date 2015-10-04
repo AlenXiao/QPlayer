@@ -44,6 +44,9 @@ except AttributeError:
 class Ui_Form(QtGui.QMainWindow):
     def __init__(self):
         super(Ui_Form, self).__init__()
+        self.file_manager = FileManager()
+        self.song_data = Song()
+        self.player_core = Player(self.song_data)
         self.mediaInfo = MediaInfo()
         #  self.audioOutput = Phonon.AudioOutput(Phonon.MusicCategory)
         #  self.mediaObject = Phonon.MediaObject(self)
@@ -68,9 +71,6 @@ class Ui_Form(QtGui.QMainWindow):
         self.refreshSongList()
         self.wasPlaying = False
         self.totalTime = '00:00'
-        self.file_manager = FileManager()
-        self.song_data = Song()
-        self.player_core = Player(self.song_data)
 
 
     # 连接鼠标Action
@@ -88,15 +88,12 @@ class Ui_Form(QtGui.QMainWindow):
 
 
     def doubleSelectSong(self,a):
-         index = self.listWidget.row(self.listWidget.selectedItems()[0])
-         self.songSelected(index)
+        song_id = unicode(self.listWidget.selectedItems()[0].text()).split('#')[0].strip()
+        self.songSelected(song_id)
 
     # 通过list选择歌曲
-    def songSelected(self,index):
-        self.mediaObject.stop()
-        self.mediaObject.clearQueue()
-        self.mediaObject.setCurrentSource(self.songs[index])
-        self.mediaObject.play()
+    def songSelected(self, song_id):
+        self.player_core.double_select_song(self.song_data.get_song_by_id(song_id).path)
         self.wasPlaying = True
 
         self.buttonChange(self.wasPlaying)
@@ -152,7 +149,6 @@ class Ui_Form(QtGui.QMainWindow):
         self.file_manager.add_files(new)
             #  self.songs.append(Phonon.MediaSource(file))
 
-        self.saveSongList()
         self.refreshSongList()
 
 
@@ -208,18 +204,6 @@ class Ui_Form(QtGui.QMainWindow):
 
     def playSong(self):
         self.player_core.play()
-        selectedSong = self.listWidget.selectedItems()
-        if len(selectedSong) > 0:
-            index = self.listWidget.row(self.listWidget.selectedItems()[0])
-        else:
-            index = 0
-
-        if self.songs[index] == self.mediaObject.currentSource():
-            if self.mediaObject.currentSource():
-                self.mediaObject.play()
-        else:
-            self.mediaObject.setCurrentSource(self.songs[index])
-            self.mediaObject.play()
         self.wasPlaying = True
 
         #play按钮变成pause
@@ -231,7 +215,6 @@ class Ui_Form(QtGui.QMainWindow):
     def pauseSong(self):
         self.player_core.pause()
         self.wasPlaying = False
-        self.mediaObject.pause()
         self.buttonChange(self.wasPlaying)
 
 
@@ -373,12 +356,9 @@ class Ui_Form(QtGui.QMainWindow):
 
     def refreshSongList(self):
         self.listWidget.clear()
-        for song in self.songs:
-            index = self.songs.index(song)
-            self.mediaInformation.setCurrentSource(self.songs[index])
-            title = self.mediaInformation.currentSource().fileName()
-            title = self.parseName(title)
-            self.listWidget.addItem(title)
+        song_data = self.song_data.get_all_songs()
+        for song in song_data:
+            self.listWidget.addItem(u'{0}# {1}'.format(song.id, song.name))
 
 
     def setupUi(self, Form):
