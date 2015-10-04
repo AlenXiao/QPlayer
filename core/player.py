@@ -16,7 +16,6 @@ class Player(object):
             '-nolirc',          # Get rid of a warning
             '-quiet',           # Cannot use really-quiet because of get_* queries
             '-softvol',         # Avoid using hardware (global) volume
-            'uri'
         ]
         self._pause = False
         self._is_playing = False
@@ -26,8 +25,8 @@ class Player(object):
         self.player = None
 
     def start(self, uri):
-        self.play_args[-1] = uri
-        self.player = subprocess.Popen(self.play_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        args = self.play_args + [uri]
+        self.player = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         Thread(target=self.watch_dog).start()
         self._is_playing = True
 
@@ -43,6 +42,12 @@ class Player(object):
 
     def load_file(self, uri):
         self._send_command('loadfile "{0}"'.format(uri.encode('utf-8')))
+
+    def double_select_song(self, uri):
+        if self.is_alive:
+            self.load_file(uri)
+        else:
+            self.start(uri)
 
     def next(self):
         song = self.song_data.next_song
