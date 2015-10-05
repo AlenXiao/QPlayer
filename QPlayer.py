@@ -18,11 +18,13 @@ from PyQt4 import QtCore, QtGui
 from images import images_rc
 import sys
 import os
+import time
 import cPickle as pickle
 from MediaInfo import MediaInfo
 from core.file_manager import FileManager
 from core.model import Song
 from core.player import Player
+from threading import Thread
 
 
 try:
@@ -71,6 +73,14 @@ class Ui_Form(QtGui.QMainWindow):
         self.refreshSongList()
         self.wasPlaying = False
         self.totalTime = '00:00'
+        self.total_int_time = 0
+        self.update_tick_process_start = False
+
+    def closeEvent(self, *args, **kwargs):
+        # catch exit sinal and stop the subprocess
+        if self.wasPlaying:
+            self.wasPlaying = False
+            self.stopSong()
 
 
     # 连接鼠标Action
@@ -83,21 +93,37 @@ class Ui_Form(QtGui.QMainWindow):
         QtCore.QObject.connect(self.previousButton, QtCore.SIGNAL('clicked()'), self.previousSong)
         # 连接DEL按钮
         QtCore.QObject.connect((QtGui.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Delete), self.listWidget)),QtCore.SIGNAL('activated()'), self.delFiles)
+        QtCore.QObject.connect(self, QtCore.SIGNAL("finished()"), self.stopSong)
+        QtCore.QObject.connect(self, QtCore.SIGNAL("terminated()"), self.stopSong)
+        QtCore.QObject.connect(self, QtCore.SIGNAL('quit'), self.stopSong)
 
         self.listWidget.mouseDoubleClickEvent = self.doubleSelectSong
 
 
     def doubleSelectSong(self,a):
+        self.wasPlaying = False
         song_id = unicode(self.listWidget.selectedItems()[0].text()).split('#')[0].strip()
         self.songSelected(song_id)
 
     # 通过list选择歌曲
     def songSelected(self, song_id):
         self.player_core.double_select_song(self.song_data.get_song_by_id(song_id).path)
-        self.wasPlaying = True
-
-        self.buttonChange(self.wasPlaying)
+        self.getTotalTime()
         self.updateMetaInfo()
+        self.buttonChange(self.wasPlaying)
+        self.wasPlaying = True
+        self.set_update_tick_sub_process()
+
+    def set_list_widget_selected(self, song_id):
+        for item in self.iter_all_list_items():
+            if str(song_id) in unicode(item[1].text()):
+                self.listWidget.setCurrentRow(item[0])
+                break
+
+    def iter_all_list_items(self):
+        for i in range(self.listWidget.count()):
+            yield i, self.listWidget.item(i)
+
 
 
     def loadSongList(self):
@@ -151,41 +177,14 @@ class Ui_Form(QtGui.QMainWindow):
 
         self.refreshSongList()
 
-
-    def delFilesFirst(self,index):
-        for num in index:
-            self.songs.remove(self.songs[num])
-
-        self.buttonChange(self.wasPlaying)
-        self.saveSongList()
-        self.refreshSongList()
-        self.totalTime = '00:00'
-
-
     def delFiles(self):
         selectedItems = self.listWidget.selectedItems()
-        index = []
-        selectedSongs = []
-
-        for item in selectedItems:
-            index.append(self.listWidget.row(item))
-
-        index = sorted(index, reverse=True)
-
-        for num in index:
-            selectedSongs.append(self.songs[num])
-
         if selectedItems:
-            if self.wasPlaying:
-                if self.mediaObject.currentSource() in selectedSongs:
-                    self.mediaObject.stop()
-                    self.wasPlaying = False
-                    self.delFilesFirst(index)
-                    self.setLabelText(1,True)
-                else:
-                    self.delFilesFirst(index)
-            else:
-                self.delFilesFirst(index)
+            ids = [int(unicode(s.text()).split('#')[0]) for s in selectedItems]
+            if self.song_data.current_song_id in ids:
+                self.stopSong()
+            self.file_manager.del_files(ids)
+            self.refreshSongList()
         else:
             warning = QtGui.QMessageBox(self)
             warning.setWindowTitle('Warning!')
@@ -201,96 +200,56 @@ class Ui_Form(QtGui.QMainWindow):
             self.playButton.setStyleSheet(_fromUtf8("border-image: url(:/btn/btn_play.png);"))
             QtCore.QObject.connect(self.playButton, QtCore.SIGNAL('clicked()'), self.playSong)
 
+    def set_update_tick_sub_process(self):
+        if not self.update_tick_process_start:
+            Thread(target=self.updateTick).start()
+            self.update_tick_process_start = True
+
 
     def playSong(self):
+        self.wasPlaying = False
         self.player_core.play()
-        self.wasPlaying = True
-
-        #play按钮变成pause
         if self.wasPlaying:
             self.buttonChange(self.wasPlaying)
-            self.updateMetaInfo()
-
+        self.getTotalTime()
+        self.updateMetaInfo()
+        self.set_list_widget_selected(self.song_data.current_song_id)
+        self.wasPlaying = True
+        self.set_update_tick_sub_process()
 
     def pauseSong(self):
-        self.player_core.pause()
         self.wasPlaying = False
+        self.player_core.pause()
         self.buttonChange(self.wasPlaying)
 
 
     def stopSong(self):
+        self.wasPlaying = False
         self.player_core.stop()
         self.totalTime = '00:00'
-        self.mediaObject.stop()
-        self.wasPlaying = False
         self.buttonChange(self.wasPlaying)
         self.setLabelText(1,True)
 
 
     def nextSong(self):
+        self.wasPlaying = False
         self.player_core.next()
-        self.mediaObject.stop()
-        self.mediaObject.clearQueue()
-        if self.wasPlaying:
-            if not self.listWidget.selectedItems():
-                index = self.songs.index(self.mediaObject.currentSource()) + 1
-                try:
-                    self.mediaObject.setCurrentSource(self.songs[index])
-                except:
-                    self.mediaObject.setCurrentSource(self.songs[0])
-            else:
-                index = self.listWidget.row(self.listWidget.selectedItems()[0]) + 1
-                try:
-                    self.mediaObject.setCurrentSource(self.songs[index])
-                except:
-                    self.mediaObject.setCurrentSource(self.songs[0])
-        else:
-            if not self.listWidget.selectedItems():
-                self.mediaObject.setCurrentSource(self.songs[0])
-            else:
-                index = self.listWidget.row(self.listWidget.selectedItems()[0]) + 1
-                try:
-                    self.mediaObject.setCurrentSource(self.songs[index])
-                except:
-                    self.mediaObject.setCurrentSource(self.songs[0])
-
-        self.mediaObject.play()
-        self.wasPlaying = True
         self.buttonChange(self.wasPlaying)
+        self.getTotalTime()
         self.updateMetaInfo()
-
+        self.set_list_widget_selected(self.song_data.current_song_id)
+        self.wasPlaying = True
+        self.set_update_tick_sub_process()
 
     def previousSong(self):
+        self.wasPlaying = False
         self.player_core.previous()
-        self.mediaObject.stop()
-        self.mediaObject.clearQueue()
-        if self.wasPlaying:
-            if not self.listWidget.selectedItems():
-                index = self.songs.index(self.mediaObject.currentSource()) - 1
-                try:
-                    self.mediaObject.setCurrentSource(self.songs[index])
-                except:
-                    self.mediaObject.setCurrentSource(self.songs[len(self.songs) - 1])
-            else:
-                index = self.listWidget.row(self.listWidget.selectedItems()[0]) - 1
-                try:
-                    self.mediaObject.setCurrentSource(self.songs[index])
-                except:
-                    self.mediaObject.setCurrentSource(self.songs[len(self.songs) - 1])
-        else:
-            if not self.listWidget.selectedItems():
-                self.mediaObject.setCurrentSource(self.songs[len(self.songs) - 1])
-            else:
-                index = self.listWidget.row(self.listWidget.selectedItems()[0]) - 1
-                try:
-                    self.mediaObject.setCurrentSource(self.songs[index])
-                except:
-                    self.mediaObject.setCurrentSource(self.songs[len(self.songs) - 1])
-
-        self.mediaObject.play()
-        self.wasPlaying = True
         self.buttonChange(self.wasPlaying)
+        self.getTotalTime()
         self.updateMetaInfo()
+        self.set_list_widget_selected(self.song_data.current_song_id)
+        self.wasPlaying = True
+        self.set_update_tick_sub_process()
 
 
     def songChanged(self,source):
@@ -305,21 +264,15 @@ class Ui_Form(QtGui.QMainWindow):
             self.label.setText(text)
 
 
-    def getMetaData(self):
-        self.mediaInformation.setCurrentSource(self.mediaObject.currentSource())
-        title = self.mediaObject.currentSource().fileName()
-        title = self.parseName(title)
-        text = 'Title:' + title + '\n' + 'Artist:N/A' + '\n' + 'Album:M/A'
-        self.setLabelText(text,False)
-
-
     def updateMetaInfo(self):
-        index = self.songs.index(self.mediaObject.currentSource())
-        string = self.mediaInfo.getFileInfo(index)
-        if string:
-            self.setLabelText(string, False)
-        else:
-            self.getMetaData()
+        tp = ('album', 'artist', 'genre', 'title')
+        if not self.file_info['title'] or self.file_info['title'] == "''":
+            self.file_info['title'] = self.file_info['file_name'].split('.')[0]
+        if not self.file_info['genre'] or self.file_info['genre'] == "''":
+            self.file_info['genre'] = 'ACG'
+        string = '\n'.join('{0}: {1}'.format(k, v).replace("'", '') for k, v in self.file_info.items() if k in tp)
+        string = QtCore.QString.fromUtf8(string)
+        self.setLabelText(string, False)
 
 
     def stateChanged(self, newState,oldState):
@@ -335,17 +288,41 @@ class Ui_Form(QtGui.QMainWindow):
 
     # 设置播放器时间
     def getTotalTime(self):
-        totalTime = self.mediaObject.totalTime()
-        totalTime = QtCore.QTime(0, (totalTime / 60000) % 60, (totalTime / 1000) % 60)
-        totalTime =totalTime.toString('mm:ss')
-        self.totalTime = totalTime
+        self.file_info = self.player_core.file_info
+        t = self.file_info['length']
+        int_t = int(float(t))
+        m, s = divmod(int(float(t)), 60)
+        if m < 10:
+            m = '0{0}'.format(m)
+        if s < 10:
+            s = '0{0}'.format(s)
+        t = '{0}:{1}'.format(m, s)
+        self.totalTime = t
+        self.total_int_time = int_t
 
 
-    def updateTick(self,time):
-        songTime = QtCore.QTime(0, (time / 60000) % 60, (time / 1000) % 60)
-        songTime = songTime.toString('mm:ss')
-        tick = songTime + '/' + self.totalTime
-        self.lcdNumber.display(tick)
+    def updateTick(self):
+        while 1:
+            try:
+                if not self.wasPlaying:
+                    self.lcdNumber.display('00:00/00:00')
+                    self.seekSlider.setValue(0)
+                    self.update_tick_process_start = False
+                    break
+                songTime = self.player_core.time_pos
+                persent = (songTime*1.0/self.total_int_time)*100
+                m, s = divmod(songTime, 60)
+                if m < 10:
+                    m = '0{0}'.format(m)
+                if s < 10:
+                    s = '0{0}'.format(s)
+                songTime = '{0}:{1}'.format(m, s)
+                tick = songTime + '/' + self.totalTime
+                self.lcdNumber.display(tick)
+                self.seekSlider.setValue(persent)
+                time.sleep(1)
+            except Exception:
+                break
 
     # 提取文件名
     def parseName(self,source):
@@ -412,16 +389,16 @@ class Ui_Form(QtGui.QMainWindow):
         self.previousButton.setIconSize(QtCore.QSize(35, 35))
         self.previousButton.setObjectName(_fromUtf8("previousButton"))
         self.gridLayout_3.addWidget(self.previousButton, 0, 2, 1, 1)
-        #  self.seekSlider = phonon.Phonon.SeekSlider(Form)
-        #  self.seekSlider.setGeometry(QtCore.QRect(20, 181, 301, 20))
+        self.seekSlider = QtGui.QSlider(QtCore.Qt.Horizontal, self)
+        self.seekSlider.setGeometry(QtCore.QRect(20, 181, 301, 20))
         font = QtGui.QFont()
         font.setBold(False)
         font.setWeight(50)
-        #  self.seekSlider.setFont(font)
-        #  self.seekSlider.setMouseTracking(False)
-        #  self.seekSlider.setAutoFillBackground(False)
-        #  self.seekSlider.setIconVisible(False)
-        #  self.seekSlider.setObjectName(_fromUtf8("seekSlider"))
+        self.seekSlider.setFont(font)
+        self.seekSlider.setMouseTracking(False)
+        self.seekSlider.setAutoFillBackground(False)
+        self.seekSlider.setObjectName(_fromUtf8("seekSlider"))
+        self.seekSlider.setEnabled(False)
         self.horizontalLayoutWidget = QtGui.QWidget(Form)
         self.horizontalLayoutWidget.setGeometry(QtCore.QRect(20, 419, 301, 41))
         self.horizontalLayoutWidget.setObjectName(_fromUtf8("horizontalLayoutWidget"))
@@ -452,7 +429,7 @@ class Ui_Form(QtGui.QMainWindow):
         self.listWidget.setObjectName(_fromUtf8("listWidget"))
         self.listWidget.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)  # 设置多选模式，用于多文件删除
         self.label = QtGui.QLabel(Form)
-        self.label.setGeometry(QtCore.QRect(20, 17, 301, 91))
+        self.label.setGeometry(QtCore.QRect(20, 10, 301, 110))
         self.label.setAutoFillBackground(False)
         self.label.setStyleSheet(_fromUtf8("border-image: url(:/bg/lable.png);\n"
 "background-image: url(:/bg/bg.png);"))
@@ -476,5 +453,7 @@ if __name__ == "__main__":
     QUI = QtGui.QMainWindow()
     ui = Ui_Form()
     ui.show()
+    def sign_action():
+        ui.stopSong()
 
     sys.exit(app.exec_())
