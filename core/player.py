@@ -44,6 +44,9 @@ class Player(object):
         self._send_command('loadfile "{0}"'.format(uri.encode('utf-8')))
 
     def double_select_song(self, uri):
+        self._push_song_to_play_queue(uri)
+
+    def _push_song_to_play_queue(self, uri):
         if self.is_alive:
             self.load_file(uri)
         else:
@@ -51,11 +54,11 @@ class Player(object):
 
     def next(self):
         song = self.song_data.next_song
-        self.load_file(song.path)
+        self._push_song_to_play_queue(song.path)
 
     def previous(self):
         song = self.song_data.previous_song
-        self.load_file(song.path)
+        self._push_song_to_play_queue(song.path)
 
     def pause(self):
         self._pause = not self._pause
@@ -91,10 +94,10 @@ class Player(object):
                 'get_file_name': ('ANS_FILENAME', 'file_name'),
                 'get_meta_album': ('ANS_META_ALBUM', 'album'),
                 'get_meta_artist': ('ANS_META_ARTIST', 'artist'),
-                'get_meta_comment': ('ANS_META_COMMENT', 'comment'),
+                #  'get_meta_comment': ('ANS_META_COMMENT', 'comment'),
                 'get_meta_genre': ('ANS_META_GENRE', 'genre'),
                 'get_meta_title': ('ANS_META_TITLE', 'title'),
-                'get_meta_year': ('ANS_META_YEAR', 'year')
+                #  'get_meta_year': ('ANS_META_YEAR', 'year')
                 }
         if not self.is_alive:
             return
