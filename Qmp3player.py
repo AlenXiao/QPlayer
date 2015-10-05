@@ -479,5 +479,4 @@ if __name__ == "__main__":
     QUI = QtGui.QMainWindow()
     ui = Ui_Form()
     ui.show()
-
     sys.exit(app.exec_())
