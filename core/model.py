@@ -9,6 +9,7 @@ class Song(object):
         self.current_song_id = song_id  # current song
 
     def get_song_by_id(self, song_id):
+        self.unset_playing()
         sql = 'select * from songs where id = {0}'.format(song_id)
         song = self.db.get(sql)
         if song:
@@ -17,6 +18,7 @@ class Song(object):
         return song
 
     def _get_current_song(self):
+        self.unset_playing()
         if self.current_song_id:
             song = self.db.get('select * from songs where id = {0}'.format(self.current_song_id))
         else:
@@ -33,10 +35,10 @@ class Song(object):
         return song
 
     def _get_song(self, next=True):
+        self.unset_playing()
         if not self.current_song_id:
             song = self.db.get('select * from songs limit 1')
             if song:
-                self.unset_playing(self.current_song_id)
                 self.current_song_id = song.id
         else:
             sql = 'select * from songs where id > {0} limit 1'.format(self.current_song_id)
@@ -73,8 +75,8 @@ class Song(object):
         sql = 'update songs set is_playing = 1 where id = {0}'.format(song_id)
         self.db.execute(sql)
 
-    def unset_playing(self, song_id):
-        sql = 'update songs set is_playing = 0 where id = {0}'.format(song_id)
+    def unset_playing(self):
+        sql = 'update songs set is_playing = 0'
         self.db.execute(sql)
 
     def get_all_songs(self):
