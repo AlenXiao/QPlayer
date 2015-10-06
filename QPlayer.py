@@ -72,6 +72,7 @@ class Ui_Form(QtGui.QMainWindow):
         self.loadSongList()
         self.refreshSongList()
         self.wasPlaying = False
+        self.is_paused = False
         self.totalTime = '00:00'
         self.total_int_time = 0
         self.update_tick_process_start = False
@@ -110,8 +111,8 @@ class Ui_Form(QtGui.QMainWindow):
         self.player_core.double_select_song(self.song_data.get_song_by_id(song_id).path)
         self.getTotalTime()
         self.updateMetaInfo()
-        self.buttonChange(self.wasPlaying)
         self.wasPlaying = True
+        self.buttonChange(self.wasPlaying)
         self.set_update_tick_sub_process()
 
     def set_list_widget_selected(self, song_id):
@@ -195,9 +196,11 @@ class Ui_Form(QtGui.QMainWindow):
     def buttonChange(self, playState):
         if playState:
             self.playButton.setStyleSheet(_fromUtf8("border-image: url(:/btn/btn_pause.png);"))
+            self.playButton.clicked.disconnect()
             QtCore.QObject.connect(self.playButton, QtCore.SIGNAL('clicked()'), self.pauseSong)
         else:
             self.playButton.setStyleSheet(_fromUtf8("border-image: url(:/btn/btn_play.png);"))
+            self.playButton.clicked.disconnect()
             QtCore.QObject.connect(self.playButton, QtCore.SIGNAL('clicked()'), self.playSong)
 
     def set_update_tick_sub_process(self):
@@ -207,24 +210,34 @@ class Ui_Form(QtGui.QMainWindow):
 
 
     def playSong(self):
-        self.wasPlaying = False
-        self.player_core.play()
-        if self.wasPlaying:
+        if not self.wasPlaying and self.is_paused:
+            print 'pause to play'
+            self.is_paused = False
+            self.player_core.pause()
+            self.wasPlaying = True
             self.buttonChange(self.wasPlaying)
-        self.getTotalTime()
-        self.updateMetaInfo()
-        self.set_list_widget_selected(self.song_data.current_song_id)
-        self.wasPlaying = True
-        self.set_update_tick_sub_process()
+            return
+        else:
+            print 'play'
+            self.player_core.play()
+            self.getTotalTime()
+            self.updateMetaInfo()
+            self.set_list_widget_selected(self.song_data.current_song_id)
+            self.wasPlaying = True
+            self.set_update_tick_sub_process()
+            self.buttonChange(self.wasPlaying)
 
     def pauseSong(self):
+        print 'pause'
         self.wasPlaying = False
+        self.is_paused = True
         self.player_core.pause()
         self.buttonChange(self.wasPlaying)
 
 
     def stopSong(self):
         self.wasPlaying = False
+        self.is_paused = False
         self.player_core.stop()
         self.totalTime = '00:00'
         self.buttonChange(self.wasPlaying)
@@ -233,22 +246,24 @@ class Ui_Form(QtGui.QMainWindow):
 
     def nextSong(self):
         self.wasPlaying = False
+        self.is_paused = False
         self.player_core.next()
-        self.buttonChange(self.wasPlaying)
         self.getTotalTime()
         self.updateMetaInfo()
         self.set_list_widget_selected(self.song_data.current_song_id)
         self.wasPlaying = True
+        self.buttonChange(self.wasPlaying)
         self.set_update_tick_sub_process()
 
     def previousSong(self):
         self.wasPlaying = False
+        self.is_paused = False
         self.player_core.previous()
-        self.buttonChange(self.wasPlaying)
         self.getTotalTime()
         self.updateMetaInfo()
         self.set_list_widget_selected(self.song_data.current_song_id)
         self.wasPlaying = True
+        self.buttonChange(self.wasPlaying)
         self.set_update_tick_sub_process()
 
 
@@ -304,7 +319,7 @@ class Ui_Form(QtGui.QMainWindow):
     def updateTick(self):
         while 1:
             try:
-                if not self.wasPlaying:
+                if not self.wasPlaying and not self.is_paused:
                     self.lcdNumber.display('00:00/00:00')
                     self.seekSlider.setValue(0)
                     self.update_tick_process_start = False
