@@ -16,6 +16,7 @@ class Bilibili(object):
         self.appkey = '0a99fa1d87fdd38c'
         self.video_uri = 'http://interface.bilibili.tv/playurl?cid={cid}&appkey={appkey}'
         self.base_uri = 'http://www.bilibili.com/video/av{av_id}/'
+        self.user_agent = 'bilianime/1960 CFNetwork/758.0.2 Darwin/15.0.0'
 
     def get_cid(self, av_id):
         html = self.get(self.base_uri.format(av_id=av_id))
@@ -23,6 +24,7 @@ class Bilibili(object):
         return result.split('=')[-1].replace('&', '')
 
     def get_video_addr(self, cid):
+        print self.video_uri.format(cid=cid, appkey=self.appkey)
         result = self.get(self.video_uri.format(cid=cid, appkey=self.appkey))
         result = xml_to_dict(result)
         print result
@@ -30,7 +32,10 @@ class Bilibili(object):
             return result['durl']['url']
 
     def get(self, uri):
-        return requests.get(uri).text
+        headers = {
+            'User-Agent': self.user_agent
+        }
+        return requests.get(uri, headers=headers).text
 
 
 if __name__ == '__main__':
