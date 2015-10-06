@@ -9,7 +9,7 @@ from threading import Thread
 
 class Player(object):
 
-    def __init__(self, song_data):
+    def __init__(self, song_data, queue=None, ui_object=None):
         self.play_args = [
             'mplayer',
             '-slave',
@@ -23,6 +23,8 @@ class Player(object):
         self._file_info = {}
         self.song_data = song_data  #model.Song
         self.player = None
+        self.queue = queue
+        self.ui_main = ui_object
 
     def start(self, uri):
         args = self.play_args + [uri]
@@ -47,6 +49,7 @@ class Player(object):
         self._push_song_to_play_queue(uri)
 
     def _push_song_to_play_queue(self, uri):
+        print self.is_alive
         if self.is_alive:
             self.load_file(uri)
         else:
@@ -65,9 +68,12 @@ class Player(object):
         self._send_command('pause')
 
     def stop(self):
-        if not self.is_alive:
-            return
-        self._send_command('stop')
+        if self.is_alive:
+            self._send_command('stop')
+
+    def seek(self, seconds):
+        if self.is_alive:
+            self._send_command('seek {0}'.format(seconds))
 
     @property
     def time_pos(self):
@@ -134,7 +140,11 @@ class Player(object):
 
 
     def watch_dog(self):
-        self.player.wait()
+        return_code = self.player.wait()
+        print return_code
+        if return_code == 0:
+            if self.ui_main.wasPlaying:
+                self.queue.put('stopping')
 
 if __name__ == '__main__':
     #  a = subprocess.Popen(['mplayer', '-slave', '-nolirc', '-quiet', '-softvol', "/home/marcoqin/marco/audiodump.wav"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
