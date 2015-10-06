@@ -73,7 +73,7 @@ class Song(object):
         self.db.execute(sql)
 
     def unset_playing(self):
-        sql = 'update songs set is_playing = 0'
+        sql = 'update songs set is_playing = 0 where is_playing = 1'
         self.db.execute(sql)
 
     def get_all_songs(self):
