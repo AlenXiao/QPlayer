@@ -20,6 +20,7 @@ from core.file_manager import FileManager
 from core.model import Song
 from core.player import Player
 from threading import Thread
+import Queue
 
 
 try:
@@ -44,7 +45,8 @@ class Ui_Form(QtGui.QMainWindow):
 
         self.file_manager = FileManager()
         self.song_data = Song()
-        self.player_core = Player(self.song_data)
+        self.queue = Queue.Queue(maxsize = 10)
+        self.player_core = Player(self.song_data, self.queue, self)
 
         self.setupUi(self)
         self.connectActions()
@@ -55,12 +57,21 @@ class Ui_Form(QtGui.QMainWindow):
         self.totalTime = '00:00'
         self.total_int_time = 0
         self.update_tick_process_start = False
+        self.slider_in_pressed_value = 0  # seekslider first value
+        Thread(target=self.about_to_stop).start()
 
     def closeEvent(self, *args, **kwargs):
         # catch exit sinal and stop the subprocess
+        self.queue.put(None)
         if self.wasPlaying:
             self.wasPlaying = False
             self.stopSong()
+
+    def keyPressEvent(self, event):
+        key = event.key()
+        print key
+        #  if key == QtCore.Qt.Key_Left:
+            #  print('Left Arrow Pressed')
 
 
     # 连接鼠标Action
@@ -71,6 +82,8 @@ class Ui_Form(QtGui.QMainWindow):
         QtCore.QObject.connect(self.delFilesButton, QtCore.SIGNAL('clicked()'), self.delFiles)
         QtCore.QObject.connect(self.nextButton, QtCore.SIGNAL('clicked()'), self.nextSong)
         QtCore.QObject.connect(self.previousButton, QtCore.SIGNAL('clicked()'), self.previousSong)
+        QtCore.QObject.connect(self.seekSlider, QtCore.SIGNAL('sliderPressed()'), self.slider_pressed)
+        QtCore.QObject.connect(self.seekSlider, QtCore.SIGNAL('sliderReleased()'), self.slider_released)
         # 连接DEL按钮
         QtCore.QObject.connect((QtGui.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Delete), self.listWidget)),QtCore.SIGNAL('activated()'), self.delFiles)
 
@@ -143,14 +156,12 @@ class Ui_Form(QtGui.QMainWindow):
 
     def playSong(self):
         if not self.wasPlaying and self.is_paused:
-            print 'pause to play'
             self.is_paused = False
             self.player_core.pause()
             self.wasPlaying = True
             self.buttonChange(self.wasPlaying)
             return
         else:
-            print 'play'
             self.player_core.play()
             self.getTotalTime()
             self.updateMetaInfo()
@@ -160,7 +171,6 @@ class Ui_Form(QtGui.QMainWindow):
             self.buttonChange(self.wasPlaying)
 
     def pauseSong(self):
-        print 'pause'
         self.wasPlaying = False
         self.is_paused = True
         self.player_core.pause()
@@ -177,8 +187,8 @@ class Ui_Form(QtGui.QMainWindow):
 
 
     def nextSong(self):
-        self.wasPlaying = False
         self.is_paused = False
+        self.wasPlaying = False
         self.player_core.next()
         self.getTotalTime()
         self.updateMetaInfo()
@@ -188,8 +198,8 @@ class Ui_Form(QtGui.QMainWindow):
         self.set_update_tick_sub_process()
 
     def previousSong(self):
-        self.wasPlaying = False
         self.is_paused = False
+        self.wasPlaying = False
         self.player_core.previous()
         self.getTotalTime()
         self.updateMetaInfo()
@@ -198,11 +208,13 @@ class Ui_Form(QtGui.QMainWindow):
         self.buttonChange(self.wasPlaying)
         self.set_update_tick_sub_process()
 
+    def slider_pressed(self):
+        self.slider_in_pressed_value = self.seekSlider.value()
 
-    def songChanged(self,source):
-        self.listWidget.setCurrentRow(self.songs.index(source))
-        self.lcdNumber.display('00:00/00:00')
-
+    def slider_released(self):
+        seek_time = (self.seekSlider.value() - self.slider_in_pressed_value)*self.total_int_time/100
+        if seek_time != 0:
+            self.player_core.seek(seek_time)
 
     def setLabelText(self,text,default = True):
         if default:
@@ -234,12 +246,26 @@ class Ui_Form(QtGui.QMainWindow):
         self.totalTime = t
         self.total_int_time = int_t
 
+    def about_to_stop(self):
+        while 1:
+            cmd = self.queue.get()
+            print cmd
+            if not cmd:
+                break
+            if cmd:
+                self.wasPlaying = False
+                self.is_paused = False
+                #  event = QtGui.QKeyEvent(QtCore.QEvent.KeyPress, QtCore.Qt.Key_L, QtCore.Qt.NoModifier)
+                event = self.nextButton.click()
+                try:
+                    QtGui.QApplication.sendEvent(event)
+                except Exception:
+                    pass
+
     def updateTick(self):
         while 1:
             try:
                 if not self.wasPlaying and not self.is_paused:
-                    self.lcdNumber.display('00:00/00:00')
-                    self.seekSlider.setValue(0)
                     self.update_tick_process_start = False
                     break
                 songTime = self.player_core.time_pos
@@ -324,7 +350,7 @@ class Ui_Form(QtGui.QMainWindow):
         self.seekSlider.setMouseTracking(False)
         self.seekSlider.setAutoFillBackground(False)
         self.seekSlider.setObjectName(_fromUtf8("seekSlider"))
-        self.seekSlider.setEnabled(False)
+        #  self.seekSlider.setEnabled(False)
         self.horizontalLayoutWidget = QtGui.QWidget(Form)
         self.horizontalLayoutWidget.setGeometry(QtCore.QRect(20, 419, 301, 41))
         self.horizontalLayoutWidget.setObjectName(_fromUtf8("horizontalLayoutWidget"))
