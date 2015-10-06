@@ -4,7 +4,7 @@
 
 '''
 Music player.
-Supports .mp3, .wav formats.
+Supports .mp3, .wav, .Flac, .ape formats.
 With an id3v1.0 tag reader.
 '''
 
@@ -13,14 +13,9 @@ __version__ = "1.1"
 
 
 from PyQt4 import QtCore, QtGui
-#  from PyQt4 import phonon
-#  from PyQt4.phonon import Phonon
-from images import images_rc
+from images import images_rc  # init resource
 import sys
-import os
 import time
-import cPickle as pickle
-from MediaInfo import MediaInfo
 from core.file_manager import FileManager
 from core.model import Song
 from core.player import Player
@@ -46,30 +41,14 @@ except AttributeError:
 class Ui_Form(QtGui.QMainWindow):
     def __init__(self):
         super(Ui_Form, self).__init__()
+
         self.file_manager = FileManager()
         self.song_data = Song()
         self.player_core = Player(self.song_data)
-        self.mediaInfo = MediaInfo()
-        #  self.audioOutput = Phonon.AudioOutput(Phonon.MusicCategory)
-        #  self.mediaObject = Phonon.MediaObject(self)
-        #  self.mediaInformation = Phonon.MediaObject(self)
-        #  self.mediaObject.setTickInterval(100)
-        #  self.mediaObject.tick.connect(self.updateTick)
-        #  self.mediaObject.currentSourceChanged.connect(self.songChanged)
-        #  self.mediaObject.stateChanged.connect(self.stateChanged)
-        #  self.mediaObject.aboutToFinish.connect(self.Finishing)
-        #  Phonon.createPath(self.mediaObject, self.audioOutput)
 
         self.setupUi(self)
         self.connectActions()
-        #  self.volumeSlider.setAudioOutput(self.audioOutput)
-        #  self.volumeSlider.setMaximumVolume(0.8)
-        #  self.seekSlider.setMediaObject(self.mediaObject)
 
-        self.songs = []
-        self.songlist = []
-        self.allsongsinfo = []
-        self.loadSongList()
         self.refreshSongList()
         self.wasPlaying = False
         self.is_paused = False
@@ -94,9 +73,6 @@ class Ui_Form(QtGui.QMainWindow):
         QtCore.QObject.connect(self.previousButton, QtCore.SIGNAL('clicked()'), self.previousSong)
         # 连接DEL按钮
         QtCore.QObject.connect((QtGui.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Delete), self.listWidget)),QtCore.SIGNAL('activated()'), self.delFiles)
-        QtCore.QObject.connect(self, QtCore.SIGNAL("finished()"), self.stopSong)
-        QtCore.QObject.connect(self, QtCore.SIGNAL("terminated()"), self.stopSong)
-        QtCore.QObject.connect(self, QtCore.SIGNAL('quit'), self.stopSong)
 
         self.listWidget.mouseDoubleClickEvent = self.doubleSelectSong
 
@@ -125,57 +101,13 @@ class Ui_Form(QtGui.QMainWindow):
         for i in range(self.listWidget.count()):
             yield i, self.listWidget.item(i)
 
-
-
-    def loadSongList(self):
-        if os.path.exists('playlist.lst') is True:
-            try:
-                f = open('playlist.lst', 'rb')
-                self.songlist = pickle.load(f)
-            except IOError:
-                pass
-            except EOFError:
-                pass
-            finally:
-                f.close()
-
-        for song in self.songlist:
-            pass
-            #print song
-            #  self.songs.append(Phonon.MediaSource(song))
-
-        self.getSongPath()
-        self.mediaInfo.parseAllSongs(self.songlist)
-
-
-    def getSongPath(self):
-        self.songlist = []
-        for song in self.songs:
-            self.mediaInformation.setCurrentSource(song)
-            path = self.mediaInformation.currentSource().fileName()
-
-            self.songlist.append(path)
-            self.mediaInformation.clearQueue()
-
-
-    def saveSongList(self):
-        self.getSongPath()
-        file = open('playlist.lst', 'wb')
-        pickle.dump(self.songlist, file)
-        file.close()
-        self.mediaInfo.parseAllSongs(self.songlist)
-
-
     def addFiles(self):
         files = QtGui.QFileDialog.getOpenFileNames(self, "Please select songs", "", self.tr("Song Files(*.*)"))
-
         new = []
         for file in files:
             print unicode(file)
             new.append(unicode(file).encode('utf-8'))
         self.file_manager.add_files(new)
-            #  self.songs.append(Phonon.MediaSource(file))
-
         self.refreshSongList()
 
     def delFiles(self):
@@ -278,7 +210,6 @@ class Ui_Form(QtGui.QMainWindow):
         else:
             self.label.setText(text)
 
-
     def updateMetaInfo(self):
         tp = ('album', 'artist', 'genre', 'title')
         if not self.file_info['title'] or self.file_info['title'] == "''":
@@ -288,18 +219,6 @@ class Ui_Form(QtGui.QMainWindow):
         string = '\n'.join('{0}: {1}'.format(k, v).replace("'", '') for k, v in self.file_info.items() if k in tp)
         string = QtCore.QString.fromUtf8(string)
         self.setLabelText(string, False)
-
-
-    def stateChanged(self, newState,oldState):
-        self.getTotalTime()
-
-    # 播放将要结束时，将下一首歌曲排入播放队列
-    def Finishing(self):
-        index = self.songs.index(self.mediaObject.currentSource()) + 1
-        if len(self.songs) > index:
-            self.mediaObject.enqueue(self.songs[index])
-        else:
-            self.mediaObject.enqueue(self.songs[0])
 
     # 设置播放器时间
     def getTotalTime(self):
@@ -314,7 +233,6 @@ class Ui_Form(QtGui.QMainWindow):
         t = '{0}:{1}'.format(m, s)
         self.totalTime = t
         self.total_int_time = int_t
-
 
     def updateTick(self):
         while 1:
@@ -338,13 +256,6 @@ class Ui_Form(QtGui.QMainWindow):
                 time.sleep(1)
             except Exception:
                 break
-
-    # 提取文件名
-    def parseName(self,source):
-        title =  source.split('/')[-1]
-        title =  title.split('.')
-        return title[-2]
-
 
     def refreshSongList(self):
         self.listWidget.clear()
