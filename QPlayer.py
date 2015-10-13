@@ -21,6 +21,8 @@ from core.model import Song
 from core.player import Player
 from threading import Thread
 import Queue
+from Qmp3player import Ui_Form as Test_ui
+from test_ui import Ui_MainWindow
 
 
 try:
@@ -88,6 +90,14 @@ class Ui_Form(QtGui.QMainWindow):
         QtCore.QObject.connect((QtGui.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Delete), self.listWidget)),QtCore.SIGNAL('activated()'), self.delFiles)
 
         self.listWidget.mouseDoubleClickEvent = self.doubleSelectSong
+
+        # test
+        QtCore.QObject.connect(self.normalPlayListButton, QtCore.SIGNAL('clicked()'), self.test_ui)
+
+    def test_ui(self):
+        ui = Ui_MainWindow(self)
+        #  ui = Test_ui(self)
+        ui.show()
 
 
     def doubleSelectSong(self,a):
@@ -357,9 +367,18 @@ class Ui_Form(QtGui.QMainWindow):
         self.horizontalLayout = QtGui.QHBoxLayout(self.horizontalLayoutWidget)
         self.horizontalLayout.setMargin(0)
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
-        #  self.volumeSlider = phonon.Phonon.VolumeSlider(self.horizontalLayoutWidget)
-        #  self.volumeSlider.setObjectName(_fromUtf8("volumeSlider"))
-        #  self.horizontalLayout.addWidget(self.volumeSlider)
+        self.normalPlayListButton = QtGui.QPushButton(self.horizontalLayoutWidget)
+        self.normalPlayListButton.setMinimumSize(QtCore.QSize(60, 25))
+        self.normalPlayListButton.setMaximumSize(QtCore.QSize(60, 25))
+        self.normalPlayListButton.setText(_fromUtf8("normal"))
+        self.horizontalLayout.addWidget(self.normalPlayListButton)
+
+        self.neteasePlayListButton = QtGui.QPushButton(self.horizontalLayoutWidget)
+        self.neteasePlayListButton.setMinimumSize(QtCore.QSize(60, 25))
+        self.neteasePlayListButton.setMaximumSize(QtCore.QSize(60, 25))
+        self.neteasePlayListButton.setText(_fromUtf8("netease"))
+        self.horizontalLayout.addWidget(self.neteasePlayListButton)
+
         self.addFilesButton = QtGui.QPushButton(self.horizontalLayoutWidget)
         self.addFilesButton.setMinimumSize(QtCore.QSize(35, 35))
         self.addFilesButton.setMaximumSize(QtCore.QSize(35, 35))
@@ -399,13 +418,22 @@ class Ui_Form(QtGui.QMainWindow):
         Form.setWindowTitle(_translate("Form", "QMusicPlayer", None))
         self.label.setText(_translate("Form", "QMusicPlayer\nAuthor：MarcoQin <qyyfy2009@gmail.com>", None))
 
+    def hide_ui(self):
+        items = ['label', 'listWidget', 'delFilesButton',
+                'addFilesButton', 'neteasePlayListButton', 'normalPlayListButton',
+                'seekSlider', 'previousButton', 'nextButton', 'playButton', 'stopButton',
+                'lcdNumber', 'horizontalLayoutWidget'
+                ]
+        self.setMaximumSize(QtCore.QSize(1280, 720))
+        self.setMinimumSize(QtCore.QSize(1280, 720))
+        self.resize(640, 480)
+        for item in items:
+            getattr(self, item).hide()
+
 
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
     QUI = QtGui.QMainWindow()
     ui = Ui_Form()
     ui.show()
-    def sign_action():
-        ui.stopSong()
-
     sys.exit(app.exec_())
