@@ -9,6 +9,7 @@
 
 from PyQt4 import QtCore, QtGui
 from threading import Thread
+from test_danmaku import get_danmaku
 import time
 from random import randint
 
@@ -32,6 +33,32 @@ class t(QtCore.QThread):
         pass
 
 
+DANMUS = get_danmaku()
+
+class MyThread(QtCore.QThread):
+    trigger = QtCore.pyqtSignal(int, int)
+
+    def __init__(self, parent=None):
+        super(MyThread, self).__init__(parent)
+        self.danmus = DANMUS
+
+    def run(self):
+        t0 = time.time()
+        t = 0
+        start = 0
+        end = 0
+        while 1:
+            for i, item in enumerate(self.danmus[end:]):
+                if item['time'] >= t+0.2:
+                    end = i
+                    break
+            if time.time()- t0 > 300:
+                break
+            self.trigger.emit(start, end)
+            start = end
+            t += 0.2
+            time.sleep(0.2)
+
 class Danmu(QtCore.QObject):
     __slots__ = ['label', 'parent', 'anim']
 
@@ -42,23 +69,15 @@ class Danmu(QtCore.QObject):
 
     def move(self):
         self.anim = QtCore.QPropertyAnimation(self.label, 'geometry', self.parent)
-        self.anim.setDuration(20*1000)
-        #  print self.anim.finished.connect(self.die, QtCore.SLOT('close()'))
-        #  print self.anim.stateChanged.connect(self.go)
+        self.anim.setDuration(10*1000)
         self.anim.setStartValue(QtCore.QRect(self.label.pos().x(), self.label.pos().y(), self.label.width(), self.label.height()))
         self.anim.setEndValue(QtCore.QRect(-self.label.width(), self.label.pos().y(), self.label.width(), self.label.height()))
         self.anim.start(QtCore.QPropertyAnimation.DeleteWhenStopped)
         def pp():
             self.die()
-            print 'haha'
         self.anim.finished.connect(pp)
 
-    def go(self, t):
-        print t
-
     def die(self):
-        print 'haha'
-        print self.label
         self.label.deleteLater()
 
 
@@ -105,6 +124,50 @@ class Ui_MainWindow(QtGui.QMainWindow):
             time.sleep(1)
             #  time.sleep(0.01)
 
+
+    def create_label(self, start, end):
+        print start, end
+        infos = self.danmus[start: end]
+        for i, info in enumerate(infos):
+            l = QtGui.QLabel(self.centralwidget)
+            l.setGeometry(QtCore.QRect(620, 20*i, 0, 0))
+            l.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignRight|QtCore.Qt.AlignTop)
+            l.setStyleSheet('color: {}'.format(info['color']))
+            des = QtGui.QGraphicsDropShadowEffect()
+            des.setOffset(0,0)
+            des.setBlurRadius(6)
+            des.setColor(QtGui.QColor('black'))
+            l.setGraphicsEffect(des)
+            txt = info['text']
+            l.setText(txt)
+            fm = l.fontMetrics()
+            l.setFixedWidth(fm.width(txt))
+            l.setFixedHeight(fm.height())
+            l.font().setBold(True)
+            l.font().setPointSize(24)
+            l.show()
+            Danmu(l, self).move()
+
+    def set_up_danmaku(self):
+        if not hasattr(self, 'danmus'):
+            self.danmus = get_danmaku()
+        t = 0
+        start = 0
+        end = 0
+        while 1:
+            for i, item in enumerate(self.danmus[end:]):
+                if item['time'] >= t+1:
+                    end = i
+                    break
+            tmp = self.danmus[start:end]
+            if not tmp:
+                break
+            self.create_label(tmp)
+            start = end
+            time.sleep(1)
+            t += 1
+
+
     def setupUi(self, MainWindow):
         MainWindow.setObjectName(_fromUtf8("MainWindow"))
         MainWindow.resize(640, 480)
@@ -129,34 +192,33 @@ class Ui_MainWindow(QtGui.QMainWindow):
         print self.label1.pos().x()
         print self.size().width()
         #  self.label1.move(QtCore.QPoint(40, 40))
-        labels = []
-        for i in range(2):
-            setattr(self, 'l%s'%i, QtGui.QLabel(self.centralwidget))
-            l = getattr(self, 'l%s'%i)
-            l.setGeometry(QtCore.QRect(620, 20*(i+2), 0, 0))
-            l.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignRight|QtCore.Qt.AlignTop)
-            l.setStyleSheet('color: white')
-            des = QtGui.QGraphicsDropShadowEffect()
-            des.setOffset(0,0)
-            des.setBlurRadius(6)
-            des.setColor(QtGui.QColor('black'))
-            l.setGraphicsEffect(des)
-            txt = 'test danmaku %s'%i
-            l.setText(txt)
-            fm = l.fontMetrics()
-            print fm.width(txt)
-            print fm.height()
-            l.setFixedWidth(fm.width(txt))
-            l.setFixedHeight(fm.height())
-            l.font().setBold(True)
-            l.font().setPointSize(24)
-            labels.append(Danmu(l, self))
-        labels.append(Danmu(self.label0, self))
-        labels.append(Danmu(self.label1, self))
+        #  labels = []
+        #  for i in range(2):
+            #  setattr(self, 'l%s'%i, QtGui.QLabel(self.centralwidget))
+            #  l = getattr(self, 'l%s'%i)
+            #  l.setGeometry(QtCore.QRect(620, 20*(i+2), 0, 0))
+            #  l.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignRight|QtCore.Qt.AlignTop)
+            #  l.setStyleSheet('color: white')
+            #  des = QtGui.QGraphicsDropShadowEffect()
+            #  des.setOffset(0,0)
+            #  des.setBlurRadius(6)
+            #  des.setColor(QtGui.QColor('black'))
+            #  l.setGraphicsEffect(des)
+            #  txt = 'test danmaku %s'%i
+            #  l.setText(txt)
+            #  fm = l.fontMetrics()
+            #  print fm.width(txt)
+            #  print fm.height()
+            #  l.setFixedWidth(fm.width(txt))
+            #  l.setFixedHeight(fm.height())
+            #  l.font().setBold(True)
+            #  l.font().setPointSize(24)
+            #  labels.append(Danmu(l, self))
+        #  labels.append(Danmu(self.label0, self))
+        #  labels.append(Danmu(self.label1, self))
 
-        for item in labels:
-            item.move()
-        #  Thread(target=self.single_danmu, args=labels).start()
+        #  for item in labels:
+            #  item.move()
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
@@ -165,6 +227,13 @@ class Ui_MainWindow(QtGui.QMainWindow):
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow", None))
         #  Thread(target=self.danmu, args=(self.label0, self.label1)).start()
+        #  Thread(target=self.set_up_danmaku).start()
+        #  self.set_up_danmaku()
+        self.danmus = DANMUS
+        print 'start create thread'
+        t = MyThread(self)
+        t.trigger.connect(self.create_label)
+        t.start()
 
 
 if __name__ == '__main__':
