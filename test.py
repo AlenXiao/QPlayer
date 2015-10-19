@@ -68,8 +68,9 @@ class Danmu(QtCore.QObject):
 
 
     def move(self):
+        s = 5000/(640 + self.label.width())
         self.anim = QtCore.QPropertyAnimation(self.label, 'geometry', self.parent)
-        self.anim.setDuration(10*1000)
+        self.anim.setDuration(s*1000)
         self.anim.setStartValue(QtCore.QRect(self.label.pos().x(), self.label.pos().y(), self.label.width(), self.label.height()))
         self.anim.setEndValue(QtCore.QRect(-self.label.width(), self.label.pos().y(), self.label.width(), self.label.height()))
         self.anim.start(QtCore.QPropertyAnimation.DeleteWhenStopped)
@@ -127,12 +128,18 @@ class Ui_MainWindow(QtGui.QMainWindow):
 
     def create_label(self, start, end):
         print start, end
+        self.up = not self.up
         infos = self.danmus[start: end]
         for i, info in enumerate(infos):
+            #  if not self.up:
+                #  i += 200
             l = QtGui.QLabel(self.centralwidget)
-            l.setGeometry(QtCore.QRect(620, 20*i, 0, 0))
             l.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignRight|QtCore.Qt.AlignTop)
-            l.setStyleSheet('color: {}'.format(info['color']))
+            l.setStyleSheet('color: {};'.format(info['color']))
+            f = l.font()
+            f.setBold(True)
+            f.setPointSize(18)
+            l.setFont(f)
             des = QtGui.QGraphicsDropShadowEffect()
             des.setOffset(0,0)
             des.setBlurRadius(6)
@@ -143,8 +150,7 @@ class Ui_MainWindow(QtGui.QMainWindow):
             fm = l.fontMetrics()
             l.setFixedWidth(fm.width(txt))
             l.setFixedHeight(fm.height())
-            l.font().setBold(True)
-            l.font().setPointSize(24)
+            l.setGeometry(QtCore.QRect(620, fm.height()*i, 0, 0))
             l.show()
             Danmu(l, self).move()
 
@@ -230,6 +236,7 @@ class Ui_MainWindow(QtGui.QMainWindow):
         #  Thread(target=self.set_up_danmaku).start()
         #  self.set_up_danmaku()
         self.danmus = DANMUS
+        self.up = False
         print 'start create thread'
         t = MyThread(self)
         t.trigger.connect(self.create_label)
