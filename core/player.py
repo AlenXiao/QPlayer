@@ -1,11 +1,10 @@
 # coding: utf-8
 __author__ = 'MarcoQin'
 
-import os
-import sys
 import time
 import subprocess
 from threading import Thread
+
 
 class Player(object):
 
@@ -21,14 +20,15 @@ class Player(object):
         self._is_playing = False
         self._time_pos = 0
         self._file_info = {}
-        self.song_data = song_data  #model.Song
+        self.song_data = song_data  # model.Song
         self.player = None
         self.queue = queue
         self.ui_main = ui_object
 
     def start(self, uri):
         args = self.play_args + [uri]
-        self.player = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        self.player = subprocess.Popen(
+            args, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         Thread(target=self.watch_dog).start()
         self._is_playing = True
 
@@ -79,7 +79,8 @@ class Player(object):
     def time_pos(self):
         if self.is_alive:
             if not self._pause:
-                time_pos = self._send_command('get_time_pos', 'ANS_TIME_POSITION')
+                time_pos = self._send_command(
+                    'get_time_pos', 'ANS_TIME_POSITION')
                 self._time_pos = int(float(time_pos))
             return self._time_pos
         return 0
@@ -96,15 +97,15 @@ class Player(object):
         the file info
         """
         base = {
-                'get_time_length': ('ANS_LENGTH', 'length'),
-                'get_file_name': ('ANS_FILENAME', 'file_name'),
-                'get_meta_album': ('ANS_META_ALBUM', 'album'),
-                'get_meta_artist': ('ANS_META_ARTIST', 'artist'),
-                #  'get_meta_comment': ('ANS_META_COMMENT', 'comment'),
-                'get_meta_genre': ('ANS_META_GENRE', 'genre'),
-                'get_meta_title': ('ANS_META_TITLE', 'title'),
-                #  'get_meta_year': ('ANS_META_YEAR', 'year')
-                }
+            'get_time_length': ('ANS_LENGTH', 'length'),
+            'get_file_name': ('ANS_FILENAME', 'file_name'),
+            'get_meta_album': ('ANS_META_ALBUM', 'album'),
+            'get_meta_artist': ('ANS_META_ARTIST', 'artist'),
+            #  'get_meta_comment': ('ANS_META_COMMENT', 'comment'),
+            'get_meta_genre': ('ANS_META_GENRE', 'genre'),
+            'get_meta_title': ('ANS_META_TITLE', 'title'),
+            #  'get_meta_year': ('ANS_META_YEAR', 'year')
+        }
         if not self.is_alive:
             return
         if not self._pause:
@@ -138,7 +139,6 @@ class Player(object):
             #  if extract_string in output:
                 #  return output.split('=')[1].strip()
 
-
     def watch_dog(self):
         return_code = self.player.wait()
         print return_code
@@ -155,7 +155,7 @@ if __name__ == '__main__':
     uri = raw_input('please input file path: ')
     #  Player().play("/home/marcoqin/音乐/小森きり - 砕月～イノチ～.flac")
     player = Player()
-    while 1:
+    while True:
         cmd = raw_input('input cmd: ')
         if cmd == 'start':
             player.play(uri)
