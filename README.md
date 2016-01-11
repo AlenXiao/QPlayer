@@ -3,15 +3,12 @@
 
 Music player..
 
-##更新记录
+##v1.2 update log
 
-**Rebuild. 放弃使用windows控件，使用pyqt4的Phonon模块实现。**
+**彻底放弃pyqt4的Phgonn模块儿，使用mplayer取代**
 
-**Drawing GUI. 2014.11.26**
+**重构代码**
 
-**Finished version 1.0 Demo. 2014.12.01**
-
-**Add fuction. 2014.12.10**
 
 ##v1.1 update log
 
@@ -24,6 +21,17 @@ Music player..
 **完成播放器最终代码，最终版本v1.1**
 
 >第一个“玩具”级别的项目完成，开始做下一个玩具……以后或许会添加歌词播放功能- -！
+
+
+##v1.0
+
+**Rebuild. 放弃使用windows控件，使用pyqt4的Phonon模块实现。**
+
+**Drawing GUI. 2014.11.26**
+
+**Finished version 1.0 Demo. 2014.12.01**
+
+**Add fuction. 2014.12.10**
 
 
 ##展示
