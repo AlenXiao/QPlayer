@@ -254,7 +254,7 @@ class Ui_Form(QtGui.QMainWindow):
             self.label.setText(
                 _translate(
                     "Form",
-                    "QMusicPlayer\nAuthor：MarcoQin <qyyfy2009@gmail.com>",
+                    "QPlayer\nAuthor：MarcoQin <qyyfy2009@gmail.com>",
                     None))
         else:
             self.label.setText(text)
@@ -449,11 +449,11 @@ class Ui_Form(QtGui.QMainWindow):
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
-        Form.setWindowTitle(_translate("Form", "QMusicPlayer", None))
+        Form.setWindowTitle(_translate("Form", "QPlayer", None))
         self.label.setText(
             _translate(
                 "Form",
-                "QMusicPlayer\nAuthor：MarcoQin <qyyfy2009@gmail.com>",
+                "QPlayer\nAuthor：MarcoQin <qyyfy2009@gmail.com>",
                 None))
 
     def hide_ui(self):
