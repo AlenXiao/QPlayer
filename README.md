@@ -36,8 +36,5 @@ Music player..
 
 ![Qmp3player][test]
 
-![Qmp3player][test1]
+[test]: https://github.com/MarcoQin/gallery/blob/master/Qmp3player/Qplayer.png
 
-[test]: https://github.com/MarcoQin/gallery/blob/master/Qmp3player/test.png
-
-[test1]:https://github.com/MarcoQin/gallery/blob/master/Qmp3player/test1.png
