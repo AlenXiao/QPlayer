@@ -1,35 +1,40 @@
 #QPlayer
 ==========
 
-Music player..
+Music player with ffmpeg\SDL2.0\PyQt\Python C-API surpport
 
-##v1.2 update log
+####Lib Dependence:
 
-**彻底放弃pyqt4的Phgonn模块儿，使用mplayer取代**
+- SDL2.0
+- ffmpeg
+    - make and install the latest ffmpeg:
+        - (maby need: sudo apt-get install yasm)
+        - ./configure --enable-shared
+        - make
+        - sudo make install
+        - if can't find lib*.so:
 
-**重构代码**
+            sudo vi /etc/ld.so.conf
+            add follow lines:
+                include ld.so.conf.d/*.conf
+                /usr/local/libevent-1.4.14b/lib
+                /usr/local/lib
+
+            then:
+                sudo ldconfig
 
 
-##v1.1 update log
+###Uasage:
 
-**重绘GUI。** >勉强可以看的GUI...v1.0简直不能看...
-
-**重构部分代码**
-
-**添加ID3 v1.0 读取功能**
-
-**完成播放器最终代码，最终版本v1.1**
+- goto core/player_core/, run`python setup.py build`.
+- copy core/player_core/build/lib.linux-x86_64-2.7/CPlayer.so to core/
+- python QPlayer.py
 
 
-##v1.0
+###Old versions:
 
-**Rebuild. 放弃使用windows控件，使用pyqt4的Phonon模块实现。**
-
-**Drawing GUI. 2014.11.26**
-
-**Finished version 1.0 Demo. 2014.12.01**
-
-**Add fuction. 2014.12.10**
+- 1.2 [releases](https://github.com/MarcoQin/QPlayer/releases)
+    - need mplayer surpport
 
 
 ##展示
