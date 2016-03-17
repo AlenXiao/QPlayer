@@ -66,6 +66,7 @@ class Ui_Form(QtGui.QMainWindow):
         if self.wasPlaying:
             self.wasPlaying = False
             self.stopSong()
+            self.freePlayer()
 
     def keyPressEvent(self, event):
         key = event.key()
@@ -218,6 +219,9 @@ class Ui_Form(QtGui.QMainWindow):
         self.buttonChange(self.wasPlaying)
         self.setLabelText(1, True)
 
+    def freePlayer(self):
+        self.player_core.free_player()
+
     def nextSong(self):
         self.is_paused = False
         self.wasPlaying = False
@@ -260,25 +264,28 @@ class Ui_Form(QtGui.QMainWindow):
             self.label.setText(text)
 
     def updateMetaInfo(self):
-        tp = ('album', 'artist', 'genre', 'title')
-        if not self.file_info['title'] or self.file_info['title'] == "''":
-            self.file_info['title'] = self.file_info['file_name'].split('.')[0]
-        if not self.file_info['genre'] or self.file_info['genre'] == "''":
-            self.file_info['genre'] = 'ACG'
-        string = '\n'.join(
-            '{0}: {1}'.format(
-                k,
-                v).replace(
-                "'",
-                '') for k,
-            v in self.file_info.items() if k in tp)
+        #  tp = ('album', 'artist', 'genre', 'title')
+        #  if not self.file_info['title'] or self.file_info['title'] == "''":
+            #  self.file_info['title'] = self.file_info['file_name'].split('.')[0]
+        #  if not self.file_info['genre'] or self.file_info['genre'] == "''":
+            #  self.file_info['genre'] = 'ACG'
+        #  string = '\n'.join(
+            #  '{0}: {1}'.format(
+                #  k,
+                #  v).replace(
+                #  "'",
+                #  '') for k,
+            #  v in self.file_info.items() if k in tp)
+        string = "Cplayer test"
         string = QtCore.QString.fromUtf8(string)
         self.setLabelText(string, False)
 
     # 设置播放器时间
     def getTotalTime(self):
+        print 'get_total time'
         self.file_info = self.player_core.file_info
         t = self.file_info['length']
+        print t
         int_t = int(float(t))
         m, s = divmod(int(float(t)), 60)
         if m < 10:
@@ -308,10 +315,17 @@ class Ui_Form(QtGui.QMainWindow):
     def updateTick(self):
         while True:
             try:
-                if not self.wasPlaying and not self.is_paused:
-                    self.update_tick_process_start = False
-                    break
-                songTime = self.player_core.time_pos
+                print 'update tick'
+                #  if not self.wasPlaying and not self.is_paused:
+                    #  self.update_tick_process_start = False
+                    #  break
+                songTime = int(self.player_core.time_pos)
+                self.total_int_time = self.player_core.total_length
+                print "((((()))))"
+                print songTime
+                print "**********"
+                print self.total_int_time
+                print "*************"
                 persent = (songTime * 1.0 / self.total_int_time) * 100
                 m, s = divmod(songTime, 60)
                 if m < 10:
@@ -319,12 +333,21 @@ class Ui_Form(QtGui.QMainWindow):
                 if s < 10:
                     s = '0{0}'.format(s)
                 songTime = '{0}:{1}'.format(m, s)
+                m, s = divmod(int(self.total_int_time), 60)
+                if m < 10:
+                    m = '0{0}'.format(m)
+                if s < 10:
+                    s = '0{0}'.format(s)
+                t = '{0}:{1}'.format(m, s)
+                self.totalTime = t
                 tick = songTime + '/' + self.totalTime
                 self.lcdNumber.display(tick)
                 self.seekSlider.setValue(persent)
                 time.sleep(1)
-            except Exception:
-                break
+            except Exception as e:
+                print e
+                continue
+                #  break
 
     def refreshSongList(self):
         self.listWidget.clear()
@@ -383,8 +406,7 @@ class Ui_Form(QtGui.QMainWindow):
         self.previousButton = QtGui.QPushButton(self.gridLayoutWidget)
         self.previousButton.setMinimumSize(QtCore.QSize(35, 35))
         self.previousButton.setMaximumSize(QtCore.QSize(35, 35))
-        self.previousButton.setStyleSheet(
-            _fromUtf8("border-image: url(:/btn/btn_previous.png);"))
+        self.previousButton.setStyleSheet( _fromUtf8("border-image: url(:/btn/btn_previous.png);"))
         self.previousButton.setText(_fromUtf8(""))
         self.previousButton.setIconSize(QtCore.QSize(35, 35))
         self.previousButton.setObjectName(_fromUtf8("previousButton"))

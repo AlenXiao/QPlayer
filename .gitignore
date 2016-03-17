@@ -3,3 +3,8 @@
 *.pyc
 *.lst
 playlist
+core/player_core/build/lib.linux-x86_64-2.7/CPlayer.so
+core/player_core/build/lib.linux-x86_64-2.7/a.mp3
+core/player_core/build/temp.linux-x86_64-2.7/player.o
+core/player_core/build/temp.linux-x86_64-2.7/player_py.o
+core/player_core/decoder_readme.md

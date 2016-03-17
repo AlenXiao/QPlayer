@@ -4,6 +4,7 @@ __author__ = 'MarcoQin'
 import time
 import subprocess
 from threading import Thread
+from CPlayer import *
 
 
 class Player(object):
@@ -12,6 +13,8 @@ class Player(object):
         self.play_args = [
             'mplayer',
             '-slave',
+            '-msglevel',  # message level: ignore all we don't want
+            'all=-1:global=5',
             '-nolirc',          # Get rid of a warning
             '-quiet',           # Cannot use really-quiet because of get_* queries
             '-softvol',         # Avoid using hardware (global) volume
@@ -26,10 +29,20 @@ class Player(object):
         self.ui_main = ui_object
 
     def start(self, uri):
-        args = self.play_args + [uri]
-        self.player = subprocess.Popen(
-            args, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-        Thread(target=self.watch_dog).start()
+        """
+        'cp_free_player_py',
+        'cp_get_current_time_pos_py',
+        'cp_get_time_length_py',
+        'cp_is_stopping_py',
+        'cp_load_file_py',
+        'cp_pause_audio_py',
+        'cp_stop_audio_py'
+        """
+        #  args = self.play_args + [uri]
+        #  self.player = subprocess.Popen(
+            #  args, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        #  Thread(target=self.watch_dog).start()
+        cp_load_file_py(uri)
         self._is_playing = True
 
     def play(self):
@@ -43,7 +56,8 @@ class Player(object):
             self.start(current_song.path)
 
     def load_file(self, uri):
-        self._send_command('loadfile "{0}"'.format(uri.encode('utf-8')))
+        #  self._send_command('loadfile "{0}"'.format(uri.encode('utf-8')))
+        cp_load_file_py(uri)
 
     def double_select_song(self, uri):
         self._push_song_to_play_queue(uri)
@@ -64,12 +78,14 @@ class Player(object):
         self._push_song_to_play_queue(song.path)
 
     def pause(self):
-        self._pause = not self._pause
-        self._send_command('pause')
+        #  self._pause = not self._pause
+        #  self._send_command('pause')
+        cp_pause_audio_py()
 
     def stop(self):
-        if self.is_alive:
-            self._send_command('stop')
+        #  if self.is_alive:
+            #  self._send_command('stop')
+        cp_stop_audio_py()
 
     def seek(self, seconds):
         if self.is_alive:
@@ -77,19 +93,25 @@ class Player(object):
 
     @property
     def time_pos(self):
-        if self.is_alive:
-            if not self._pause:
-                time_pos = self._send_command(
-                    'get_time_pos', 'ANS_TIME_POSITION')
-                self._time_pos = int(float(time_pos))
-            return self._time_pos
-        return 0
+        #  if self.is_alive:
+            #  if not self._pause:
+                #  time_pos = self._send_command(
+                    #  'get_time_pos', 'ANS_TIME_POSITION')
+                #  self._time_pos = int(float(time_pos))
+            #  return self._time_pos
+        #  return 0
+        return cp_get_current_time_pos_py()
+
+    @property
+    def total_length(self):
+        return cp_get_time_length_py()
 
     @property
     def is_alive(self):
-        if self.player is None:
-            return False
-        return self.player.poll() is None
+        #  if self.player is None:
+            #  return False
+        #  return self.player.poll() is None
+        return True
 
     @property
     def file_info(self):
@@ -106,12 +128,18 @@ class Player(object):
             'get_meta_title': ('ANS_META_TITLE', 'title'),
             #  'get_meta_year': ('ANS_META_YEAR', 'year')
         }
-        if not self.is_alive:
-            return
-        if not self._pause:
-            for k, v in base.items():
-                self._file_info[v[1]] = self._send_command(k, v[0])
+        #  if not self.is_alive:
+            #  return
+        #  if not self._pause:
+            #  for k, v in base.items():
+                #  self._file_info[v[1]] = self._send_command(k, v[0])
+        for k, v in base.items():
+            self._file_info[v[1]] = 'TEST'
+        self._file_info['length'] = cp_get_time_length_py()
         return self._file_info
+
+    def free_player(self):
+        cp_free_player_py()
 
     def _send_command(self, cmd, extract_string=None):
         """
