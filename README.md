@@ -37,7 +37,7 @@ Music player with ffmpeg\SDL2.0\PyQt\Python C-API surpport
     - need mplayer surpport
 
 
-##ScreenShots
+##ScreenShots:
 
 ![Qmp3player][test]
 
