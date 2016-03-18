@@ -52,6 +52,7 @@ class Ui_Form(QtGui.QMainWindow):
         self.connectActions()
 
         self.refreshSongList()
+        self.quit = False
         self.wasPlaying = False
         self.is_paused = False
         self.totalTime = '00:00'
@@ -66,7 +67,9 @@ class Ui_Form(QtGui.QMainWindow):
         if self.wasPlaying:
             self.wasPlaying = False
             self.stopSong()
-            self.freePlayer()
+        self.freePlayer()
+        self.quit = True
+        super(Ui_Form, self).closeEvent(*args, **kwargs)
 
     def keyPressEvent(self, event):
         key = event.key()
@@ -298,6 +301,8 @@ class Ui_Form(QtGui.QMainWindow):
 
     def about_to_stop(self):
         while True:
+            if self.quit:
+                break
             cmd = self.queue.get()
             print cmd
             if not cmd:
@@ -315,17 +320,14 @@ class Ui_Form(QtGui.QMainWindow):
     def updateTick(self):
         while True:
             try:
-                print 'update tick'
+                if self.quit:
+                    self.update_tick_process_start = False
+                    break
                 #  if not self.wasPlaying and not self.is_paused:
                     #  self.update_tick_process_start = False
                     #  break
                 songTime = int(self.player_core.time_pos)
                 self.total_int_time = self.player_core.total_length
-                print "((((()))))"
-                print songTime
-                print "**********"
-                print self.total_int_time
-                print "*************"
                 persent = (songTime * 1.0 / self.total_int_time) * 100
                 m, s = divmod(songTime, 60)
                 if m < 10:
