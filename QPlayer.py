@@ -323,9 +323,9 @@ class Ui_Form(QtGui.QMainWindow):
                 if self.quit:
                     self.update_tick_process_start = False
                     break
-                #  if not self.wasPlaying and not self.is_paused:
-                    #  self.update_tick_process_start = False
-                    #  break
+                if not self.wasPlaying and not self.is_paused:
+                    time.sleep(1)
+                    continue
                 songTime = int(self.player_core.time_pos)
                 self.total_int_time = self.player_core.total_length
                 persent = (songTime * 1.0 / self.total_int_time) * 100
