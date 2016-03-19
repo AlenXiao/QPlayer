@@ -10,15 +10,6 @@ from CPlayer import *
 class Player(object):
 
     def __init__(self, song_data, queue=None, ui_object=None):
-        self.play_args = [
-            'mplayer',
-            '-slave',
-            '-msglevel',  # message level: ignore all we don't want
-            'all=-1:global=5',
-            '-nolirc',          # Get rid of a warning
-            '-quiet',           # Cannot use really-quiet because of get_* queries
-            '-softvol',         # Avoid using hardware (global) volume
-        ]
         self._pause = False
         self._is_playing = False
         self._time_pos = 0
@@ -27,6 +18,7 @@ class Player(object):
         self.player = None
         self.queue = queue
         self.ui_main = ui_object
+        self.watch_dog_stated = False
 
     def start(self, uri):
         """
@@ -38,10 +30,9 @@ class Player(object):
         'cp_pause_audio_py',
         'cp_stop_audio_py'
         """
-        #  args = self.play_args + [uri]
-        #  self.player = subprocess.Popen(
-            #  args, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-        #  Thread(target=self.watch_dog).start()
+        if not self.watch_dog_stated:
+            Thread(target=self.watch_dog).start()
+            self.watch_dog_stated = True
         cp_load_file_py(uri)
         self._is_playing = True
 
@@ -78,14 +69,13 @@ class Player(object):
         self._push_song_to_play_queue(song.path)
 
     def pause(self):
-        #  self._pause = not self._pause
-        #  self._send_command('pause')
-        cp_pause_audio_py()
+        if self.is_alive:
+            self._pause = not self._pause
+            cp_pause_audio_py()
 
     def stop(self):
-        #  if self.is_alive:
-            #  self._send_command('stop')
-        cp_stop_audio_py()
+        if self.is_alive:
+            cp_stop_audio_py()
 
     def seek(self, seconds):
         if self.is_alive:
@@ -101,7 +91,7 @@ class Player(object):
 
     @property
     def is_alive(self):
-        return True
+        return cp_is_alive_py()
 
     @property
     def file_info(self):
@@ -131,36 +121,13 @@ class Player(object):
     def free_player(self):
         cp_free_player_py()
 
-    def _send_command(self, cmd, extract_string=None):
-        """
-        cmd: command need to execute
-        extract_string: if extract_string is not None, return the tring extracted from
-                        stdout
-        """
-        cmd += '\n'
-        try:
-            self.player.stdin.write(cmd)
-        except (TypeError, UnicodeEncodeError):
-            self.player.stdin.write(cmd.encode('utf-8'))
-        time.sleep(0.1)
-        if not extract_string:
-            return
-        for line in iter(self.player.stdout.readline, ''):
-            if extract_string in line:
-                return line.split('=')[1].strip()
-
-        #  while 1:
-            #  try:
-                #  output = self.player.stdout.readline().rstrip()
-            #  except IOError:
-                #  return
-            #  if extract_string in output:
-                #  return output.split('=')[1].strip()
-
     def watch_dog(self):
-        return_code = self.player.wait()
-        print return_code
-        if return_code == 0:
+        while(1):
+            if self.ui_main.quit:
+                break
+            if not cp_is_stopping_py():
+                time.sleep(1)
+                continue
             if self.ui_main.wasPlaying:
                 self.queue.put('stopping')
 
