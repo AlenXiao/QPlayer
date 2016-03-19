@@ -3,6 +3,7 @@
 
 #include "player_def.h"
 
+extern CPlayer *global_cplayer_ctx;
 void global_init();
 CPlayer *player_create();
 void player_destory(CPlayer *cp);

@@ -29,14 +29,12 @@ static PyObject * cp_stop_audio_py(PyObject *self, PyObject *args) {
 static PyObject * cp_get_time_length_py(PyObject *self, PyObject *args) {
     int length;
     length = cp_get_time_length();
-    printf("cp_get_length %d\n", length);
     return Py_BuildValue("i", length);
 }
 
 static PyObject * cp_get_current_time_pos_py(PyObject *self, PyObject *args) {
     double pos;
     pos = cp_get_current_time_pos();
-    printf("cp_get_current_time_pos %f\n", pos);
     return Py_BuildValue("f", pos);
 }
 
@@ -55,6 +53,14 @@ static PyObject * cp_seek_audio_by_sec_py(PyObject *self, PyObject *args) {
     return Py_BuildValue("i", 1);
 }
 
+static PyObject * cp_is_alive_py(PyObject *self, PyObject *args) {
+    int status = 0;
+    if (global_cplayer_ctx != NULL) {
+        status = 1;
+    }
+    return Py_BuildValue("i", status);
+}
+
 static PyMethodDef CPlayerMethods[] = {
     {"cp_load_file_py",  cp_load_file_py, METH_VARARGS, "Open file_path and play."},
     {"cp_free_player_py",  cp_free_player_py, METH_VARARGS, "free player."},
@@ -64,6 +70,7 @@ static PyMethodDef CPlayerMethods[] = {
     {"cp_get_current_time_pos_py",  cp_get_current_time_pos_py, METH_VARARGS, "free player."},
     {"cp_is_stopping_py",  cp_is_stopping_py, METH_VARARGS, "free player."},
     {"cp_seek_audio_by_sec_py",  cp_seek_audio_by_sec_py, METH_VARARGS, "free player."},
+    {"cp_is_alive_py",  cp_is_alive_py, METH_VARARGS, "is_alive."},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
