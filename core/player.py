@@ -89,17 +89,10 @@ class Player(object):
 
     def seek(self, seconds):
         if self.is_alive:
-            self._send_command('seek {0}'.format(seconds))
+            cp_seek_audio_by_sec_py(seconds)
 
     @property
     def time_pos(self):
-        #  if self.is_alive:
-            #  if not self._pause:
-                #  time_pos = self._send_command(
-                    #  'get_time_pos', 'ANS_TIME_POSITION')
-                #  self._time_pos = int(float(time_pos))
-            #  return self._time_pos
-        #  return 0
         return cp_get_current_time_pos_py()
 
     @property
@@ -108,9 +101,6 @@ class Player(object):
 
     @property
     def is_alive(self):
-        #  if self.player is None:
-            #  return False
-        #  return self.player.poll() is None
         return True
 
     @property
