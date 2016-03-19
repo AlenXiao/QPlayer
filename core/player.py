@@ -33,7 +33,7 @@ class Player(object):
         if not self.watch_dog_stated:
             Thread(target=self.watch_dog).start()
             self.watch_dog_stated = True
-        cp_load_file_py(uri)
+        cp_load_file_py(uri.encode('utf-8'))
         self._is_playing = True
 
     def play(self):
@@ -48,7 +48,7 @@ class Player(object):
 
     def load_file(self, uri):
         #  self._send_command('loadfile "{0}"'.format(uri.encode('utf-8')))
-        cp_load_file_py(uri)
+        cp_load_file_py(uri.encode('utf-8'))
 
     def double_select_song(self, uri):
         self._push_song_to_play_queue(uri)
@@ -99,24 +99,20 @@ class Player(object):
         the file info
         """
         base = {
-            'get_time_length': ('ANS_LENGTH', 'length'),
-            'get_file_name': ('ANS_FILENAME', 'file_name'),
-            'get_meta_album': ('ANS_META_ALBUM', 'album'),
-            'get_meta_artist': ('ANS_META_ARTIST', 'artist'),
-            #  'get_meta_comment': ('ANS_META_COMMENT', 'comment'),
-            'get_meta_genre': ('ANS_META_GENRE', 'genre'),
-            'get_meta_title': ('ANS_META_TITLE', 'title'),
-            #  'get_meta_year': ('ANS_META_YEAR', 'year')
+            'length': cp_get_time_length_py(),
+            'file_name': '',
+            'album': '',
+            'artist': '',
+            'genre': '',
+            'title': '',
+            'date': ''
         }
         #  if not self.is_alive:
             #  return
         #  if not self._pause:
             #  for k, v in base.items():
                 #  self._file_info[v[1]] = self._send_command(k, v[0])
-        for k, v in base.items():
-            self._file_info[v[1]] = 'TEST'
-        self._file_info['length'] = cp_get_time_length_py()
-        return self._file_info
+        return base
 
     def free_player(self):
         cp_free_player_py()
@@ -130,6 +126,7 @@ class Player(object):
                 continue
             if self.ui_main.wasPlaying:
                 self.queue.put('stopping')
+                time.sleep(3)
 
 if __name__ == '__main__':
     #  a = subprocess.Popen(['mplayer', '-slave', '-nolirc', '-quiet', '-softvol', "/home/marcoqin/marco/audiodump.wav"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)

@@ -304,13 +304,12 @@ class Ui_Form(QtGui.QMainWindow):
             if self.quit:
                 break
             cmd = self.queue.get()
-            print cmd
+            print "self.queue.get(): ", cmd
             if not cmd:
                 break
             if cmd:
                 self.wasPlaying = False
                 self.is_paused = False
-                #  event = QtGui.QKeyEvent(QtCore.QEvent.KeyPress, QtCore.Qt.Key_L, QtCore.Qt.NoModifier)
                 event = self.nextButton.click()
                 try:
                     QtGui.QApplication.sendEvent(event)
@@ -348,8 +347,8 @@ class Ui_Form(QtGui.QMainWindow):
                 time.sleep(1)
             except Exception as e:
                 print e
+                time.sleep(1)
                 continue
-                #  break
 
     def refreshSongList(self):
         self.listWidget.clear()
