@@ -46,6 +46,15 @@ static PyObject * cp_is_stopping_py(PyObject *self, PyObject *args) {
     return Py_BuildValue("i", st);
 }
 
+static PyObject * cp_seek_audio_by_sec_py(PyObject *self, PyObject *args) {
+    int sec;
+    if (!PyArg_ParseTuple(args, "i", &sec)) {
+        return Py_BuildValue("i", 0);
+    }
+    cp_seek_audio_by_sec(sec);
+    return Py_BuildValue("i", 1);
+}
+
 static PyMethodDef CPlayerMethods[] = {
     {"cp_load_file_py",  cp_load_file_py, METH_VARARGS, "Open file_path and play."},
     {"cp_free_player_py",  cp_free_player_py, METH_VARARGS, "free player."},
@@ -54,6 +63,7 @@ static PyMethodDef CPlayerMethods[] = {
     {"cp_get_time_length_py",  cp_get_time_length_py, METH_VARARGS, "free player."},
     {"cp_get_current_time_pos_py",  cp_get_current_time_pos_py, METH_VARARGS, "free player."},
     {"cp_is_stopping_py",  cp_is_stopping_py, METH_VARARGS, "free player."},
+    {"cp_seek_audio_by_sec_py",  cp_seek_audio_by_sec_py, METH_VARARGS, "free player."},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
