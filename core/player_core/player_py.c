@@ -61,6 +61,32 @@ static PyObject * cp_is_alive_py(PyObject *self, PyObject *args) {
     return Py_BuildValue("i", status);
 }
 
+static PyObject * cp_get_metadata_py(PyObject *self, PyObject *args) {
+    const char *file_path;
+    PyObject *dict;
+    PyObject *v;
+    SongInfo *info = (SongInfo *)malloc(sizeof(SongInfo));
+    dict = Py_BuildValue("{}");
+    if (!PyArg_ParseTuple(args, "s", &file_path)) {
+        goto rt;
+    }
+    int state = extract_meta_data((char *)file_path, info);
+    v = Py_BuildValue("s", info->title);
+    PyMapping_SetItemString(dict, "title", v);
+    v = Py_BuildValue("s", info->album);
+    PyMapping_SetItemString(dict, "album", v);
+    v = Py_BuildValue("s", info->artist);
+    PyMapping_SetItemString(dict, "artist", v);
+    v = Py_BuildValue("s", info->genre);
+    PyMapping_SetItemString(dict, "genre", v);
+    v = Py_BuildValue("s", info->track);
+    PyMapping_SetItemString(dict, "track", v);
+    v = Py_BuildValue("s", info->date);
+    PyMapping_SetItemString(dict, "date", v);
+rt:
+    return dict;
+}
+
 static PyMethodDef CPlayerMethods[] = {
     {"cp_load_file_py",  cp_load_file_py, METH_VARARGS, "Open file_path and play."},
     {"cp_free_player_py",  cp_free_player_py, METH_VARARGS, "free player."},
@@ -71,6 +97,7 @@ static PyMethodDef CPlayerMethods[] = {
     {"cp_is_stopping_py",  cp_is_stopping_py, METH_VARARGS, "free player."},
     {"cp_seek_audio_by_sec_py",  cp_seek_audio_by_sec_py, METH_VARARGS, "free player."},
     {"cp_is_alive_py",  cp_is_alive_py, METH_VARARGS, "is_alive."},
+    {"cp_get_metadata_py",  cp_get_metadata_py, METH_VARARGS, "metadata."},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
