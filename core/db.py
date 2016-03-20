@@ -16,7 +16,13 @@ class DB(object):
                 (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name varchar(255) NOT NULL,
-                    path varchar(255),
+                    path varchar(512),
+                    title VARCHAR(512),
+                    album VARCHAR(512),
+                    artist VARCHAR(512),
+                    genre VARCHAR(64),
+                    track VARCHAR(64),
+                    date VARCHAR(64),
                     is_playing int(2) DEFAULT 0
                 )'''
         cur.execute(sql)
