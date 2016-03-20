@@ -26,4 +26,5 @@ int cp_is_stopping();
 double cp_get_current_time_pos();
 void cp_free_player();
 CPlayer *cp_load_file(const char *filename);
+int extract_meta_data(char *file_path, SongInfo *info);
 #endif // PLAYER_H
