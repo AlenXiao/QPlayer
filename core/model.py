@@ -34,6 +34,12 @@ class Song(object):
             self.set_playing(song.id)
         return song
 
+    def get_meta_data(self):
+        if self.current_song_id:
+            song = self.db.get('select * from songs where id = {0}'.format(self.current_song_id))
+            return song
+        return {}
+
     def _get_song(self, next=True):
         if not self.current_song_id:
             song = self.db.get('select * from songs limit 1')

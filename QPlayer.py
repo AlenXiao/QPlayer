@@ -267,19 +267,17 @@ class Ui_Form(QtGui.QMainWindow):
             self.label.setText(text)
 
     def updateMetaInfo(self):
-        #  tp = ('album', 'artist', 'genre', 'title')
-        #  if not self.file_info['title'] or self.file_info['title'] == "''":
-            #  self.file_info['title'] = self.file_info['file_name'].split('.')[0]
-        #  if not self.file_info['genre'] or self.file_info['genre'] == "''":
-            #  self.file_info['genre'] = 'ACG'
-        #  string = '\n'.join(
-            #  '{0}: {1}'.format(
-                #  k,
-                #  v).replace(
-                #  "'",
-                #  '') for k,
-            #  v in self.file_info.items() if k in tp)
-        string = "Cplayer test"
+        info = self.file_info
+        tp = ('album', 'artist', 'genre', 'title')
+        if not info['title']:
+            info['title'] = info['name'].split('.')[0]
+        if not info['genre']:
+            info['genre'] = 'ACG'
+        string = '\n'.join(
+            '{0}: {1}'.format(
+                k,
+                v.encode('utf-8')) for k,
+            v in info.items() if k in tp)
         string = QtCore.QString.fromUtf8(string)
         self.setLabelText(string, False)
 

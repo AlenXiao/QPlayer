@@ -1,3 +1,4 @@
+#! python
 # coding: utf-8
 __author__ = 'MarcoQin'
 
@@ -21,15 +22,6 @@ class Player(object):
         self.watch_dog_stated = False
 
     def start(self, uri):
-        """
-        'cp_free_player_py',
-        'cp_get_current_time_pos_py',
-        'cp_get_time_length_py',
-        'cp_is_stopping_py',
-        'cp_load_file_py',
-        'cp_pause_audio_py',
-        'cp_stop_audio_py'
-        """
         if not self.watch_dog_stated:
             Thread(target=self.watch_dog).start()
             self.watch_dog_stated = True
@@ -47,7 +39,6 @@ class Player(object):
             self.start(current_song.path)
 
     def load_file(self, uri):
-        #  self._send_command('loadfile "{0}"'.format(uri.encode('utf-8')))
         cp_load_file_py(uri.encode('utf-8'))
 
     def double_select_song(self, uri):
@@ -100,18 +91,15 @@ class Player(object):
         """
         base = {
             'length': cp_get_time_length_py(),
-            'file_name': '',
+            'name': '',
             'album': '',
             'artist': '',
             'genre': '',
             'title': '',
             'date': ''
         }
-        #  if not self.is_alive:
-            #  return
-        #  if not self._pause:
-            #  for k, v in base.items():
-                #  self._file_info[v[1]] = self._send_command(k, v[0])
+        info = self.song_data.get_meta_data()
+        base.update(info)
         return base
 
     def free_player(self):
