@@ -84,4 +84,15 @@ typedef struct CPlayer {
     char *input_filename;
 } CPlayer;
 
+typedef struct SongInfo {
+    char *name;
+    char *path;
+    char *title;
+    char *album;
+    char *artist;
+    char *genre;
+    char *track;
+    char *date;
+} SongInfo;
+
 #endif // end _player_def_H
