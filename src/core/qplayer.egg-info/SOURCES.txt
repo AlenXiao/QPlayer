@@ -1,0 +1,7 @@
+setup.py
+core/qplayer.egg-info/PKG-INFO
+core/qplayer.egg-info/SOURCES.txt
+core/qplayer.egg-info/dependency_links.txt
+core/qplayer.egg-info/entry_points.txt
+core/qplayer.egg-info/top_level.txt
+core/qplayer.egg-info/zip-safe

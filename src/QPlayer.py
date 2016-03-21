@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Python 2.7
 # PyQt4
@@ -542,9 +543,12 @@ class Ui_Form(QtGui.QMainWindow):
             getattr(self, item).hide()
 
 
-if __name__ == "__main__":
+def main():
     app = QtGui.QApplication(sys.argv)
     QUI = QtGui.QMainWindow()
     ui = Ui_Form()
     ui.show()
     sys.exit(app.exec_())
+
+if __name__ == "__main__":
+    main()
