@@ -111,6 +111,14 @@ class Ui_Form(QtGui.QMainWindow):
             self.seekSlider,
             QtCore.SIGNAL('sliderReleased()'),
             self.slider_released)
+        QtCore.QObject.connect(
+            self.volumeSlider,
+            QtCore.SIGNAL('sliderReleased()'),
+            self.volume_slider_released)
+        QtCore.QObject.connect(
+            self.volumeSlider,
+            QtCore.SIGNAL('valueChanged(int)'),
+            self.volume_slider_released)
         # 连接DEL按钮
         QtCore.QObject.connect(
             (QtGui.QShortcut(
@@ -255,6 +263,13 @@ class Ui_Form(QtGui.QMainWindow):
                      self.slider_in_pressed_value) * self.total_int_time / 100
         if seek_time != 0:
             self.player_core.seek(seek_time)
+
+    def volume_slider_released(self):
+        vol = self.volumeSlider.value()
+        if vol == 99:
+            vol = 100
+        self.volumeDisplayLabel.setText(_fromUtf8(str(vol)))
+        self.player_core.set_volume(vol)
 
     def setLabelText(self, text, default=True):
         if default:
@@ -445,11 +460,12 @@ class Ui_Form(QtGui.QMainWindow):
         self.volumeSlider.setAutoFillBackground(False)
         self.volumeSlider.setObjectName(_fromUtf8("volumeSlider"))
         self.horizontalLayout.addWidget(self.volumeSlider)
+        self.volumeSlider.setValue(100)
 
         self.volumeDisplayLabel = QtGui.QLabel(self.horizontalLayoutWidget)
-        self.volumeDisplayLabel.setMinimumSize(QtCore.QSize(20, 30))
-        self.volumeDisplayLabel.setMaximumSize(QtCore.QSize(20, 30))
-        self.volumeDisplayLabel.setText(_fromUtf8("0"))
+        self.volumeDisplayLabel.setMinimumSize(QtCore.QSize(40, 20))
+        self.volumeDisplayLabel.setMaximumSize(QtCore.QSize(40, 20))
+        self.volumeDisplayLabel.setText(_fromUtf8("100"))
         self.volumeDisplayLabel.setObjectName(_fromUtf8("volumeDisplayLabel"))
         self.horizontalLayout.addWidget(self.volumeDisplayLabel)
 
