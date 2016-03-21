@@ -41,5 +41,5 @@ Music player with ffmpeg\SDL2.0\PyQt\Python C-API surpport
 
 ![Qmp3player][test]
 
-[test]: https://github.com/MarcoQin/gallery/blob/master/Qmp3player/Qplayer.png
+[test]: https://github.com/MarcoQin/gallery/blob/master/Qmp3player/Qplayer1.png
 
