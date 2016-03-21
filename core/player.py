@@ -41,6 +41,10 @@ class Player(object):
     def load_file(self, uri):
         cp_load_file_py(uri.encode('utf-8'))
 
+    def set_volume(self, vol):
+        if self.is_alive:
+            cp_set_volume_py(vol)
+
     def double_select_song(self, uri):
         self._push_song_to_play_queue(uri)
 

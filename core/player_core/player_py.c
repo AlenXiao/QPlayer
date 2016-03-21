@@ -87,6 +87,16 @@ rt:
     return dict;
 }
 
+static PyObject * cp_set_volume_py(PyObject *self, PyObject *args) {
+    int volume = 0;
+    if (!PyArg_ParseTuple(args, "i", &volume)) {
+        goto rt;
+    }
+    cp_set_volume(volume);
+rt:
+    return Py_BuildValue("i", 1);
+}
+
 static PyMethodDef CPlayerMethods[] = {
     {"cp_load_file_py",  cp_load_file_py, METH_VARARGS, "Open file_path and play."},
     {"cp_free_player_py",  cp_free_player_py, METH_VARARGS, "free player."},
@@ -98,6 +108,7 @@ static PyMethodDef CPlayerMethods[] = {
     {"cp_seek_audio_by_sec_py",  cp_seek_audio_by_sec_py, METH_VARARGS, "free player."},
     {"cp_is_alive_py",  cp_is_alive_py, METH_VARARGS, "is_alive."},
     {"cp_get_metadata_py",  cp_get_metadata_py, METH_VARARGS, "metadata."},
+    {"cp_set_volume_py",  cp_set_volume_py, METH_VARARGS, "set volume."},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
