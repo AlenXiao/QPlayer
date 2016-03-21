@@ -428,6 +428,31 @@ class Ui_Form(QtGui.QMainWindow):
         self.horizontalLayout.setMargin(0)
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
 
+        self.volumeLabel = QtGui.QLabel(self.horizontalLayoutWidget)
+        self.volumeLabel.setMinimumSize(QtCore.QSize(20, 20))
+        self.volumeLabel.setMaximumSize(QtCore.QSize(20, 20))
+        self.volumeLabel.setText(_fromUtf8("vol"))
+        self.volumeLabel.setObjectName(_fromUtf8("volumeLabel"))
+        self.horizontalLayout.addWidget(self.volumeLabel)
+
+        self.volumeSlider= QtGui.QSlider(QtCore.Qt.Horizontal, self)
+        self.volumeSlider.setMaximumWidth(100)
+        font = QtGui.QFont()
+        font.setBold(False)
+        font.setWeight(50)
+        self.volumeSlider.setFont(font)
+        self.volumeSlider.setMouseTracking(False)
+        self.volumeSlider.setAutoFillBackground(False)
+        self.volumeSlider.setObjectName(_fromUtf8("volumeSlider"))
+        self.horizontalLayout.addWidget(self.volumeSlider)
+
+        self.volumeDisplayLabel = QtGui.QLabel(self.horizontalLayoutWidget)
+        self.volumeDisplayLabel.setMinimumSize(QtCore.QSize(20, 30))
+        self.volumeDisplayLabel.setMaximumSize(QtCore.QSize(20, 30))
+        self.volumeDisplayLabel.setText(_fromUtf8("0"))
+        self.volumeDisplayLabel.setObjectName(_fromUtf8("volumeDisplayLabel"))
+        self.horizontalLayout.addWidget(self.volumeDisplayLabel)
+
         self.addFilesButton = QtGui.QPushButton(self.horizontalLayoutWidget)
         self.addFilesButton.setMinimumSize(QtCore.QSize(35, 35))
         self.addFilesButton.setMaximumSize(QtCore.QSize(35, 35))
@@ -436,6 +461,7 @@ class Ui_Form(QtGui.QMainWindow):
         self.addFilesButton.setText(_fromUtf8(""))
         self.addFilesButton.setObjectName(_fromUtf8("addFilesButton"))
         self.horizontalLayout.addWidget(self.addFilesButton)
+
         self.delFilesButton = QtGui.QPushButton(self.horizontalLayoutWidget)
         self.delFilesButton.setMinimumSize(QtCore.QSize(35, 35))
         self.delFilesButton.setMaximumSize(QtCore.QSize(35, 35))
@@ -444,6 +470,7 @@ class Ui_Form(QtGui.QMainWindow):
         self.delFilesButton.setText(_fromUtf8(""))
         self.delFilesButton.setObjectName(_fromUtf8("delFilesButton"))
         self.horizontalLayout.addWidget(self.delFilesButton)
+
         self.listWidget = QtGui.QListWidget(Form)
         self.listWidget.setGeometry(QtCore.QRect(20, 213, 301, 192))
         self.listWidget.setStyleSheet(
