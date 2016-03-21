@@ -1,3 +1,0 @@
-[console_scripts]
-qplayer = QPlayer.__main__:main
-
